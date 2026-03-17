@@ -1,0 +1,2254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MarketLens — AI Investment Intelligence</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0c0f;
+    --bg2: #111318;
+    --bg3: #181c23;
+    --bg4: #1e232d;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --text2: #8b91a0;
+    --text3: #555c6e;
+    --accent: #4ade80;
+    --accent2: #22d3ee;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --purple: #a78bfa;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'Sora', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; }
+
+  .logo-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-tagline {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding-left: 42px;
+  }
+
+  .sidebar-section {
+    padding: 16px 12px 8px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(74,222,128,0.1); color: var(--accent); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .watchlist-items { padding: 0 12px 12px; }
+
+  .watchlist-ticker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 2px;
+  }
+
+  .watchlist-ticker:hover { background: var(--bg3); }
+  .watchlist-ticker.active { background: var(--bg3); }
+
+  .ticker-left { display: flex; flex-direction: column; }
+  .ticker-sym { font-weight: 500; font-size: 13px; color: var(--text); font-family: var(--font-mono); }
+  .ticker-name { font-size: 11px; color: var(--text3); }
+  .ticker-right { display: flex; flex-direction: column; align-items: flex-end; }
+  .ticker-price { font-size: 13px; font-family: var(--font-mono); font-weight: 500; }
+  .ticker-chg { font-size: 11px; font-family: var(--font-mono); }
+  .pos { color: var(--accent); }
+  .neg { color: var(--red); }
+
+  .add-ticker-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px dashed var(--border2);
+    background: none;
+    border-radius: 8px;
+    color: var(--text3);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin: 4px 12px;
+    width: calc(100% - 24px);
+  }
+
+  .add-ticker-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(74,222,128,0.05); }
+
+  /* Main content */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+  /* Top bar */
+  .topbar {
+    position: sticky; top: 0;
+    background: rgba(10,12,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 5;
+  }
+
+  .search-wrap {
+    flex: 1;
+    max-width: 480px;
+    position: relative;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px;
+    color: var(--text3);
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 14px 9px 36px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-input:focus { border-color: var(--border2); }
+  .search-input::placeholder { color: var(--text3); }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text3);
+    padding: 6px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Content area */
+  .content { padding: 28px; flex: 1; }
+
+  /* Cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Hero section */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .metric-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+
+  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-family: var(--font-mono); font-weight: 500; }
+  .metric-sub { font-size: 12px; margin-top: 4px; font-family: var(--font-mono); }
+
+  /* Main dashboard grid */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* Chart area */
+  .chart-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .chart-ticker {
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .chart-price { font-family: var(--font-mono); font-size: 22px; font-weight: 500; }
+  .chart-chg { font-family: var(--font-mono); font-size: 14px; }
+
+  .timeframes { display: flex; gap: 4px; }
+
+  .tf-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text3);
+    font-size: 12px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tf-btn:hover { color: var(--text); border-color: var(--border2); }
+  .tf-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+
+  .chart-container { position: relative; height: 240px; }
+
+  /* Events on chart */
+  .event-markers {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .event-tag {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+
+  .event-tag.positive { background: rgba(74,222,128,0.1); color: var(--accent); border: 1px solid rgba(74,222,128,0.2); }
+  .event-tag.negative { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  .event-tag.neutral { background: rgba(251,191,36,0.1); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+
+  /* News feed */
+  .news-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+  .news-item:hover .news-headline { color: var(--accent); }
+
+  .news-meta { font-size: 11px; color: var(--text3); margin-bottom: 4px; display: flex; gap: 8px; }
+  .news-headline { font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 6px; }
+  .news-sentiment {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  /* AI Analysis panel */
+  .ai-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ai-badge {
+    background: linear-gradient(135deg, rgba(74,222,128,0.2), rgba(34,211,238,0.2));
+    border: 1px solid rgba(74,222,128,0.3);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .ai-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .ai-output {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text2);
+    min-height: 80px;
+  }
+
+  .ai-output p { margin-bottom: 10px; }
+  .ai-output p:last-child { margin-bottom: 0; }
+
+  .ai-output strong { color: var(--text); font-weight: 500; }
+  .ai-output .bull { color: var(--accent); }
+  .ai-output .bear { color: var(--red); }
+
+  .ai-prompt-area {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .ai-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .ai-input:focus { border-color: rgba(74,222,128,0.4); }
+  .ai-input::placeholder { color: var(--text3); }
+
+  .ai-submit {
+    padding: 9px 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .ai-submit:hover { opacity: 0.85; }
+  .ai-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Settings modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+
+  .modal-sub { color: var(--text2); font-size: 13px; margin-bottom: 24px; line-height: 1.5; }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus { border-color: rgba(74,222,128,0.5); }
+
+  .form-hint { font-size: 11px; color: var(--text3); margin-top: 5px; }
+  .form-hint a { color: var(--accent2); text-decoration: none; }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+  .btn-secondary {
+    padding: 9px 18px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.15s;
+  }
+
+  .btn-secondary:hover { color: var(--text); border-color: var(--border2); }
+
+  .btn-primary {
+    padding: 9px 20px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: opacity 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* Loading states */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .loading-bar { height: 14px; margin-bottom: 8px; }
+
+  /* Typewriter */
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor::after {
+    content: '|';
+    animation: blink 1s infinite;
+    color: var(--accent);
+    margin-left: 1px;
+  }
+
+  /* Add ticker input */
+  .add-ticker-input {
+    width: calc(100% - 24px);
+    margin: 0 12px 4px;
+    background: var(--bg3);
+    border: 1px solid rgba(74,222,128,0.4);
+    border-radius: 8px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    text-transform: uppercase;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: none;
+    background: none;
+    color: var(--text3);
+    font-size: 12px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+
+  .tab-btn:hover { color: var(--text); background: var(--bg3); }
+  .tab-btn.active { color: var(--text); background: var(--bg3); }
+
+  /* Portfolio table */
+  .port-table { width: 100%; border-collapse: collapse; }
+  .port-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 0 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .port-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .port-table tr:last-child td { border-bottom: none; }
+  .port-table td:not(:first-child) { font-family: var(--font-mono); }
+
+  /* Sentiment badges */
+  .sentiment-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+    padding: 2px 7px; border-radius: 4px; text-transform: uppercase;
+  }
+  .sentiment-badge.bullish { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+  .sentiment-badge.bearish { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
+  .sentiment-badge.neutral { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+  .sentiment-badge.scoring { background: rgba(139,145,160,0.1);  color: #8b91a0; border: 1px solid rgba(139,145,160,0.2); }
+
+  /* Main nav tabs */
+  .main-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .main-tab {
+    padding: 10px 18px; background: none; border: none;
+    color: var(--text3); font-size: 13px; font-family: var(--font-body);
+    cursor: pointer; transition: all 0.15s; font-weight: 500;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .main-tab:hover { color: var(--text); }
+  .main-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Portfolio */
+  .portfolio-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .add-position-form {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;
+  }
+  .form-field label { display: block; font-size: 11px; color: var(--text3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-field input {
+    width: 100%; background: var(--bg4); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 8px 10px; color: var(--text);
+    font-family: var(--font-mono); font-size: 13px; outline: none;
+  }
+  .form-field input:focus { border-color: rgba(74,222,128,0.5); }
+  .pnl-positive { color: var(--accent); }
+  .pnl-negative { color: var(--red); }
+
+  /* Chart correlation pins */
+  .chart-pins { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chart-pin {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; padding: 3px 9px; border-radius: 4px; cursor: pointer; transition: opacity 0.15s;
+  }
+  .chart-pin:hover { opacity: 0.8; }
+  .chart-pin.bull { background: rgba(74,222,128,0.1); color: var(--accent); border: 1px solid rgba(74,222,128,0.2); }
+  .chart-pin.bear { background: rgba(248,113,113,0.1); color: var(--red);    border: 1px solid rgba(248,113,113,0.2); }
+  .chart-pin.neut { background: rgba(251,191,36,0.1);  color: var(--amber);  border: 1px solid rgba(251,191,36,0.2); }
+
+  /* Toast notifications */
+  .toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 999; pointer-events: none;
+  }
+  .toast {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius); padding: 14px 18px;
+    min-width: 300px; max-width: 380px;
+    pointer-events: all;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.bull-toast { border-left: 3px solid var(--accent); }
+  .toast.bear-toast { border-left: 3px solid var(--red); }
+  .toast-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .toast-body  { font-size: 12px; color: var(--text2); font-family: var(--font-mono); }
+  .toast-close { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 0 0 8px; }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* Alerts panel */
+  .alert-form {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;
+  }
+  .alert-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .alert-badge.above { background: rgba(74,222,128,0.12); color: var(--accent); border: 1px solid rgba(74,222,128,0.25); }
+  .alert-badge.below { background: rgba(248,113,113,0.12); color: var(--red);    border: 1px solid rgba(248,113,113,0.25); }
+  .alert-badge.triggered { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.25); }
+
+  /* Comparison view */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .compare-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 18px; cursor: pointer;
+    transition: border-color 0.15s; position: relative;
+  }
+  .compare-card:hover { border-color: var(--border2); }
+  .compare-card.selected { border-color: var(--accent); background: rgba(74,222,128,0.05); }
+  .compare-card.c1 { border-top: 3px solid #4ade80; }
+  .compare-card.c2 { border-top: 3px solid #22d3ee; }
+  .compare-card.c3 { border-top: 3px solid #a78bfa; }
+  .compare-ticker-sym  { font-family: var(--font-display); font-size: 28px; line-height: 1; margin-bottom: 4px; }
+  .compare-ticker-name { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
+  .compare-stat { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .compare-stat:last-child { border-bottom: none; }
+  .compare-stat-label { color: var(--text3); }
+  .compare-stat-val { font-family: var(--font-mono); font-weight: 500; }
+  .compare-rank {
+    position: absolute; top: 12px; right: 12px;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .compare-rank.r1 { background: rgba(74,222,128,0.2); color: var(--accent); }
+  .compare-rank.r2 { background: rgba(251,191,36,0.2);  color: var(--amber); }
+  .compare-rank.r3 { background: rgba(248,113,113,0.2); color: var(--red); }
+  .compare-selector {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+    padding: 14px; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    align-items: center;
+  }
+  .compare-chip {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px;
+    font-family: var(--font-mono); font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border2); background: var(--bg4);
+    color: var(--text2); transition: all 0.15s;
+  }
+  .compare-chip:hover { color: var(--text); border-color: var(--accent); }
+  .compare-chip.active-c1 { background: rgba(74,222,128,0.15); color: #4ade80; border-color: rgba(74,222,128,0.4); }
+  .compare-chip.active-c2 { background: rgba(34,211,238,0.15); color: #22d3ee; border-color: rgba(34,211,238,0.4); }
+  .compare-chip.active-c3 { background: rgba(167,139,250,0.15); color: #a78bfa; border-color: rgba(167,139,250,0.4); }
+  .compare-chart-wrap { height: 280px; position: relative; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .hero-grid { grid-template-columns: 1fr 1fr; }
+    .portfolio-grid { grid-template-columns: 1fr 1fr; }
+    .add-position-form { grid-template-columns: 1fr 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ─── Default Watchlist ─── */
+const DEFAULT_WATCHLIST = [
+  { sym: 'AAPL', name: 'Apple Inc.',      price: null, chg: null },
+  { sym: 'NVDA', name: 'NVIDIA Corp.',    price: null, chg: null },
+  { sym: 'MSFT', name: 'Microsoft Corp.', price: null, chg: null },
+  { sym: 'TSLA', name: 'Tesla Inc.',      price: null, chg: null },
+  { sym: 'AMZN', name: 'Amazon.com',      price: null, chg: null },
+];
+
+/* ─── Helpers ─── */
+function timeAgo(date) {
+  const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+  if (diff < 60)    return `${diff}s ago`;
+  if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+function generateFallbackChart(days, basePrice, trendUp) {
+  let price = (basePrice || 200) * 0.88;
+  const trend = trendUp ? 0.002 : -0.001;
+  const prices = [], labels = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    price *= (1 + trend + (Math.random() - 0.48) * 0.025);
+    prices.push(parseFloat(price.toFixed(2)));
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  }
+  return { prices, labels };
+}
+
+function fmt$(n) { return n != null ? `$${Number(n).toFixed(2)}` : '—'; }
+function fmtPct(n) { return n != null ? `${n >= 0 ? '+' : ''}${Number(n).toFixed(2)}%` : '—'; }
+
+/* ─── Finnhub API ─── */
+async function fetchQuote(sym, key) {
+  const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${key}`);
+  if (!res.ok) throw new Error(`Finnhub ${res.status}`);
+  const q = await res.json();
+  if (!q || (q.c === 0 && q.pc === 0)) throw new Error('No quote data');
+  return {
+    price: q.c, chg: parseFloat(((q.c - q.pc) / q.pc * 100).toFixed(2)),
+    open: q.o, high: q.h, low: q.l, prevClose: q.pc,
+  };
+}
+
+async function fetchChart(sym, key) {
+  // Fetch 400 days so all timeframes (1W/1M/3M/6M/1Y) work
+  const to = Math.floor(Date.now() / 1000), from = to - 400 * 86400;
+  const res = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${sym}&resolution=D&from=${from}&to=${to}&token=${key}`);
+  if (!res.ok) throw new Error(`Chart ${res.status}`);
+  const d = await res.json();
+  if (d.s !== 'ok' || !d.c?.length) throw new Error('No candle data');
+  return {
+    prices: d.c,
+    labels: d.t.map(ts => new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    timestamps: d.t,
+  };
+}
+
+async function fetchNews(sym, key) {
+  const to = new Date(), from = new Date();
+  from.setDate(from.getDate() - 7);
+  const fmt = d => d.toISOString().split('T')[0];
+  const res = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${sym}&from=${fmt(from)}&to=${fmt(to)}&token=${key}`);
+  if (!res.ok) throw new Error(`News ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error('Unexpected news response');
+  return data.slice(0, 12).map(a => ({
+    source: a.source || 'Finnhub', headline: a.headline, url: a.url,
+    time: timeAgo(new Date(a.datetime * 1000)),
+    timestamp: a.datetime * 1000,
+    sentiment: null, sentimentScore: null,
+  }));
+}
+
+/* ─── AI Sentiment Scorer ─── */
+async function scoreNewsSentiment(articles, ticker, anthropicKey) {
+  if (!articles.length || !anthropicKey) return articles;
+  const headlines = articles.map((a, i) => `${i + 1}. ${a.headline}`).join('\n');
+  const prompt = `You are a financial analyst. Score each headline's sentiment for ${ticker} stock investors.
+For each headline return a JSON array with objects: { "index": number, "sentiment": "bullish"|"bearish"|"neutral", "score": 0-100 }
+Score = confidence (100 = very strong signal). Return ONLY the JSON array, no other text.
+
+Headlines:
+${headlines}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': anthropicKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514', max_tokens: 800,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) throw new Error(`Sentiment API ${res.status}`);
+  const data = await res.json();
+  const text = data.content?.[0]?.text || '[]';
+  const clean = text.replace(/```json|```/g, '').trim();
+  const scores = JSON.parse(clean);
+  return articles.map((a, i) => {
+    const s = scores.find(x => x.index === i + 1);
+    return s ? { ...a, sentiment: s.sentiment, sentimentScore: s.score } : a;
+  });
+}
+
+/* ─── Icons ─── */
+const Icon = {
+  Search:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+  Chart:     () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  Portfolio: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
+  AI:        () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26A7 7 0 0 1 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/></svg>,
+  Settings:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>,
+  Plus:      () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Spark:     () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  Trash:     () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>,
+  Bell:      () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+};
+
+/* ─── Settings Modal ─── */
+function SettingsModal({ onClose, onSave, savedKeys }) {
+  const [keys, setKeys] = useState(savedKeys);
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-title">API Configuration</div>
+        <div className="modal-sub">Stored locally in your browser only — never shared.</div>
+        <div className="form-group">
+          <label className="form-label">Anthropic API Key</label>
+          <input className="form-input" type="password" placeholder="sk-ant-..."
+            value={keys.anthropic || ''} onChange={e => setKeys(k => ({...k, anthropic: e.target.value}))} />
+          <div className="form-hint">AI analysis + sentiment scoring. <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Finnhub API Key — Prices, Charts &amp; News</label>
+          <input className="form-input" type="password" placeholder="e.g. cv1abc123xyz..."
+            value={keys.finnhub || ''} onChange={e => setKeys(k => ({...k, finnhub: e.target.value}))} />
+          <div className="form-hint">One key for everything. Free: 60 calls/min. <a href="https://finnhub.io" target="_blank">finnhub.io</a></div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn-primary" onClick={() => { onSave(keys); onClose(); }}>Save Keys</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Price Chart (with correlation pins) ─── */
+function PriceChart({ ticker, timeframe, liveChartData, currentStock, scoredNews }) {
+  const canvasRef = useRef(null);
+  const chartRef  = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+
+    const tfDays = { '1W': 7, '1M': 30, '3M': 90 }[timeframe] || 30;
+    let labels, prices, timestamps = [];
+
+    if (liveChartData?.prices?.length) {
+      prices     = liveChartData.prices.slice(-tfDays);
+      labels     = liveChartData.labels.slice(-tfDays);
+      timestamps = (liveChartData.timestamps || []).slice(-tfDays);
+    } else {
+      const days = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365 }[timeframe] || 30;
+      const fb   = generateFallbackChart(days, currentStock?.price, (currentStock?.chg||0) >= 0);
+      prices = fb.prices; labels = fb.labels;
+    }
+
+    const isUp  = prices[prices.length - 1] >= prices[0];
+    const color = isUp ? '#4ade80' : '#f87171';
+    const ctx   = canvasRef.current.getContext('2d');
+    const grad  = ctx.createLinearGradient(0, 0, 0, 240);
+    grad.addColorStop(0, isUp ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+    // Build annotation points from scored news
+    const annotationPlugins = {};
+    if (scoredNews?.length && timestamps.length) {
+      const chartMin = timestamps[0] * 1000;
+      const chartMax = timestamps[timestamps.length - 1] * 1000;
+      scoredNews.filter(n => n.sentiment && n.timestamp >= chartMin && n.timestamp <= chartMax)
+        .forEach((n, i) => {
+          const idx = timestamps.findIndex(ts => ts * 1000 >= n.timestamp);
+          if (idx < 0) return;
+          annotationPlugins[`pin${i}`] = {
+            type: 'point',
+            xValue: labels[idx],
+            yValue: prices[idx],
+            radius: 5,
+            backgroundColor: n.sentiment === 'bullish' ? '#4ade80' : n.sentiment === 'bearish' ? '#f87171' : '#fbbf24',
+            borderColor: '#0a0c0f',
+            borderWidth: 2,
+          };
+        });
+    }
+
+    chartRef.current = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ data: prices, borderColor: color, borderWidth: 2,
+        fill: true, backgroundColor: grad, tension: 0.3,
+        pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: color }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#181c23', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+            titleColor: '#8b91a0', bodyColor: '#e8eaf0',
+            bodyFont: { family: 'DM Mono', size: 13 },
+            callbacks: { label: c => `$${Number(c.raw).toFixed(2)}` }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, border: { display: false },
+            ticks: { color: '#555c6e', font: { size: 11, family: 'DM Mono' }, maxTicksLimit: 6 } },
+          y: { position: 'right', border: { display: false },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#555c6e', font: { size: 11, family: 'DM Mono' },
+              callback: v => `$${Number(v).toFixed(0)}` } }
+        }
+      }
+    });
+    return () => { if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; } };
+  }, [ticker, timeframe, liveChartData, scoredNews]);
+
+  return <canvas ref={canvasRef} />;
+}
+
+/* ─── Portfolio Panel ─── */
+function PortfolioPanel({ watchlist, apiKeys }) {
+  const [positions, setPositions] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ml_portfolio') || '[]'); } catch { return []; }
+  });
+  const [form, setForm] = useState({ sym: '', shares: '', buyPrice: '' });
+  const [formError, setFormError] = useState('');
+
+  const savePositions = (pos) => {
+    setPositions(pos);
+    try { localStorage.setItem('ml_portfolio', JSON.stringify(pos)); } catch {}
+  };
+
+  const addPosition = () => {
+    const sym      = form.sym.trim().toUpperCase();
+    const shares   = parseFloat(form.shares);
+    const buyPrice = parseFloat(form.buyPrice);
+    if (!sym)              return setFormError('Enter a ticker symbol');
+    if (isNaN(shares) || shares <= 0)     return setFormError('Enter valid number of shares');
+    if (isNaN(buyPrice) || buyPrice <= 0) return setFormError('Enter valid buy price');
+    setFormError('');
+    const existing = positions.findIndex(p => p.sym === sym);
+    if (existing >= 0) {
+      const updated = [...positions];
+      updated[existing] = { ...updated[existing], shares, buyPrice };
+      savePositions(updated);
+    } else {
+      savePositions([...positions, { sym, shares, buyPrice }]);
+    }
+    setForm({ sym: '', shares: '', buyPrice: '' });
+  };
+
+  const removePosition = (sym) => savePositions(positions.filter(p => p.sym !== sym));
+
+  // Enrich positions with live prices
+  const enriched = positions.map(p => {
+    const stock     = watchlist.find(s => s.sym === p.sym);
+    const curPrice  = stock?.price || null;
+    const value     = curPrice ? curPrice * p.shares : null;
+    const cost      = p.buyPrice * p.shares;
+    const pnl       = value != null ? value - cost : null;
+    const pnlPct    = pnl != null ? (pnl / cost) * 100 : null;
+    return { ...p, curPrice, value, cost, pnl, pnlPct };
+  });
+
+  const totalValue = enriched.reduce((s, p) => s + (p.value || p.cost), 0);
+  const totalCost  = enriched.reduce((s, p) => s + p.cost, 0);
+  const totalPnl   = totalValue - totalCost;
+  const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+
+  return (
+    <div>
+      {/* Summary cards */}
+      {positions.length > 0 && (
+        <div className="portfolio-grid">
+          {[
+            { label: 'Total Value',    val: fmt$(totalValue),                cls: '' },
+            { label: 'Total Cost',     val: fmt$(totalCost),                 cls: '' },
+            { label: 'Total P&L',      val: fmt$(totalPnl),                  cls: totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative' },
+            { label: 'Return',         val: fmtPct(totalPnlPct),             cls: totalPnlPct >= 0 ? 'pnl-positive' : 'pnl-negative' },
+          ].map(({ label, val, cls }) => (
+            <div key={label} className="metric-card">
+              <div className="metric-label">{label}</div>
+              <div className={`metric-value ${cls}`} style={{fontSize:'20px'}}>{val}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add position form */}
+      <div className="card" style={{marginBottom:'16px'}}>
+        <div className="card-title">Add Position</div>
+        <div className="add-position-form">
+          <div className="form-field">
+            <label>Ticker</label>
+            <input placeholder="AAPL" value={form.sym}
+              onChange={e => setForm(f => ({...f, sym: e.target.value.toUpperCase()}))}
+              onKeyDown={e => e.key === 'Enter' && addPosition()} />
+          </div>
+          <div className="form-field">
+            <label>Shares</label>
+            <input type="number" placeholder="10" value={form.shares}
+              onChange={e => setForm(f => ({...f, shares: e.target.value}))}
+              onKeyDown={e => e.key === 'Enter' && addPosition()} />
+          </div>
+          <div className="form-field">
+            <label>Buy Price ($)</label>
+            <input type="number" placeholder="150.00" value={form.buyPrice}
+              onChange={e => setForm(f => ({...f, buyPrice: e.target.value}))}
+              onKeyDown={e => e.key === 'Enter' && addPosition()} />
+          </div>
+          <button className="btn-primary" style={{height:'36px',padding:'0 20px'}} onClick={addPosition}>
+            Add
+          </button>
+        </div>
+        {formError && <div style={{color:'var(--red)',fontSize:'12px',marginTop:'-8px',marginBottom:'8px'}}>{formError}</div>}
+      </div>
+
+      {/* Positions table */}
+      {positions.length > 0 ? (
+        <div className="card">
+          <div className="card-title">Holdings</div>
+          <table className="port-table">
+            <thead>
+              <tr>
+                <th>Ticker</th><th>Shares</th><th>Buy Price</th>
+                <th>Current</th><th>Value</th><th>P&amp;L</th><th>Return</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {enriched.map(p => (
+                <tr key={p.sym}>
+                  <td><div style={{fontWeight:500}}>{p.sym}</div></td>
+                  <td>{p.shares}</td>
+                  <td>{fmt$(p.buyPrice)}</td>
+                  <td>{fmt$(p.curPrice)}</td>
+                  <td>{fmt$(p.value)}</td>
+                  <td className={p.pnl != null ? (p.pnl >= 0 ? 'pnl-positive' : 'pnl-negative') : ''}>
+                    {fmt$(p.pnl)}
+                  </td>
+                  <td className={p.pnlPct != null ? (p.pnlPct >= 0 ? 'pnl-positive' : 'pnl-negative') : ''}>
+                    {fmtPct(p.pnlPct)}
+                  </td>
+                  <td>
+                    <button onClick={() => removePosition(p.sym)}
+                      style={{background:'none',border:'none',color:'var(--text3)',cursor:'pointer',padding:'4px'}}>
+                      <Icon.Trash />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{fontSize:'11px',color:'var(--text3)',marginTop:'12px',paddingTop:'10px',borderTop:'1px solid var(--border)'}}>
+            * Live prices from Finnhub. P&L updates when prices load. Portfolio data saved in your browser.
+          </div>
+        </div>
+      ) : (
+        <div className="card" style={{textAlign:'center',padding:'40px',color:'var(--text3)'}}>
+          <div style={{fontSize:'32px',marginBottom:'12px'}}>📊</div>
+          <div style={{fontSize:'14px',marginBottom:'6px',color:'var(--text2)'}}>No positions yet</div>
+          <div style={{fontSize:'13px'}}>Add your first position above to track P&amp;L in real time.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Sentiment Badge ─── */
+function SentimentBadge({ sentiment, score }) {
+  if (!sentiment) return <span className="sentiment-badge scoring">scoring…</span>;
+  const icon = sentiment === 'bullish' ? '▲' : sentiment === 'bearish' ? '▼' : '●';
+  return (
+    <span className={`sentiment-badge ${sentiment}`}>
+      {icon} {sentiment}{score != null ? ` ${score}` : ''}
+    </span>
+  );
+}
+
+/* ─── Toast Notification ─── */
+function Toast({ toasts, dismiss }) {
+  return (
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast ${t.direction === 'above' ? 'bull-toast' : 'bear-toast'}`}>
+          <div className="toast-title">
+            <span>{t.direction === 'above' ? '▲' : '▼'} {t.sym} Price Alert</span>
+            <button className="toast-close" onClick={() => dismiss(t.id)}>×</button>
+          </div>
+          <div className="toast-body">
+            {t.direction === 'above' ? 'Rose above' : 'Fell below'} ${Number(t.target).toFixed(2)} → now ${Number(t.currentPrice).toFixed(2)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Alerts Panel ─── */
+function AlertsPanel({ watchlist, alerts, setAlerts }) {
+  const [form, setForm] = useState({ sym: '', target: '', direction: 'above' });
+  const [formError, setFormError] = useState('');
+
+  const saveAlerts = (a) => {
+    setAlerts(a);
+    try { localStorage.setItem('ml_alerts', JSON.stringify(a)); } catch {}
+  };
+
+  const addAlert = () => {
+    const sym    = form.sym.trim().toUpperCase();
+    const target = parseFloat(form.target);
+    if (!sym)              return setFormError('Enter a ticker symbol');
+    if (isNaN(target) || target <= 0) return setFormError('Enter a valid price target');
+    setFormError('');
+    const id = Date.now();
+    saveAlerts([...alerts, { id, sym, target, direction: form.direction, triggered: false, createdAt: new Date().toISOString() }]);
+    setForm({ sym: '', target: '', direction: 'above' });
+  };
+
+  const removeAlert = (id) => saveAlerts(alerts.filter(a => a.id !== id));
+  const clearTriggered = () => saveAlerts(alerts.filter(a => !a.triggered));
+
+  const enriched = alerts.map(a => {
+    const stock = watchlist.find(s => s.sym === a.sym);
+    return { ...a, currentPrice: stock?.price || null };
+  });
+
+  return (
+    <div>
+      {/* Add alert form */}
+      <div className="card" style={{marginBottom:'16px'}}>
+        <div className="card-title">Set Price Alert</div>
+        <div className="alert-form">
+          <div className="form-field">
+            <label>Ticker</label>
+            <input placeholder="AAPL" value={form.sym}
+              onChange={e => setForm(f => ({...f, sym: e.target.value.toUpperCase()}))}
+              onKeyDown={e => e.key === 'Enter' && addAlert()} />
+          </div>
+          <div className="form-field">
+            <label>Price Target ($)</label>
+            <input type="number" placeholder="260.00" value={form.target}
+              onChange={e => setForm(f => ({...f, target: e.target.value}))}
+              onKeyDown={e => e.key === 'Enter' && addAlert()} />
+          </div>
+          <div className="form-field">
+            <label>Direction</label>
+            <select value={form.direction} onChange={e => setForm(f => ({...f, direction: e.target.value}))}
+              style={{width:'100%',background:'var(--bg4)',border:'1px solid var(--border2)',borderRadius:'6px',padding:'8px 10px',color:'var(--text)',fontFamily:'var(--font-body)',fontSize:'13px',outline:'none'}}>
+              <option value="above">Rises above</option>
+              <option value="below">Falls below</option>
+            </select>
+          </div>
+          <button className="btn-primary" style={{height:'36px',padding:'0 20px'}} onClick={addAlert}>
+            Add Alert
+          </button>
+        </div>
+        {formError && <div style={{color:'var(--red)',fontSize:'12px',marginTop:'-8px',marginBottom:'8px'}}>{formError}</div>}
+      </div>
+
+      {/* Active alerts */}
+      {alerts.length > 0 ? (
+        <div className="card">
+          <div className="card-title">
+            Active Alerts
+            {alerts.some(a => a.triggered) && (
+              <button onClick={clearTriggered}
+                style={{background:'none',border:'1px solid var(--border)',borderRadius:'6px',color:'var(--text3)',fontSize:'11px',padding:'3px 10px',cursor:'pointer'}}>
+                Clear triggered
+              </button>
+            )}
+          </div>
+          {enriched.map(a => (
+            <div key={a.id} className="alert-row">
+              <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+                <div>
+                  <div style={{fontWeight:500,fontSize:'14px',fontFamily:'var(--font-mono)'}}>{a.sym}</div>
+                  <div style={{fontSize:'11px',color:'var(--text3)',marginTop:'2px'}}>
+                    Set {new Date(a.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+                  </div>
+                </div>
+                <span className={`alert-badge ${a.triggered ? 'triggered' : a.direction}`}>
+                  {a.triggered ? '✓ triggered' : a.direction === 'above' ? `▲ above $${Number(a.target).toFixed(2)}` : `▼ below $${Number(a.target).toFixed(2)}`}
+                </span>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:'13px',fontFamily:'var(--font-mono)',color:'var(--text2)'}}>
+                    Target: ${Number(a.target).toFixed(2)}
+                  </div>
+                  <div style={{fontSize:'12px',color:'var(--text3)'}}>
+                    Now: {a.currentPrice ? `$${Number(a.currentPrice).toFixed(2)}` : '—'}
+                  </div>
+                </div>
+                <button onClick={() => removeAlert(a.id)}
+                  style={{background:'none',border:'none',color:'var(--text3)',cursor:'pointer',padding:'4px'}}>
+                  <Icon.Trash />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card" style={{textAlign:'center',padding:'40px',color:'var(--text3)'}}>
+          <div style={{fontSize:'32px',marginBottom:'12px'}}>🔔</div>
+          <div style={{fontSize:'14px',marginBottom:'6px',color:'var(--text2)'}}>No alerts set</div>
+          <div style={{fontSize:'13px'}}>Add a price target above and get notified when it triggers.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Comparison Chart ─── */
+function CompareChart({ datasets }) {
+  const canvasRef = useRef(null);
+  const chartRef  = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current || !datasets.length) return;
+    if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+
+    const COLORS = ['#4ade80', '#22d3ee', '#a78bfa'];
+    const minLen  = Math.min(...datasets.map(d => d.prices.length));
+
+    // Normalize to % change from first point
+    const chartDatasets = datasets.map((d, i) => {
+      const base   = d.prices[d.prices.length - minLen];
+      const prices = d.prices.slice(-minLen);
+      const pct    = prices.map(p => parseFloat(((p - base) / base * 100).toFixed(2)));
+      return {
+        label: d.sym, data: pct,
+        borderColor: COLORS[i], borderWidth: 2,
+        fill: false, tension: 0.3,
+        pointRadius: 0, pointHoverRadius: 5,
+        pointHoverBackgroundColor: COLORS[i],
+      };
+    });
+
+    const labels = datasets[0].labels.slice(-minLen);
+    const ctx    = canvasRef.current.getContext('2d');
+
+    chartRef.current = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: chartDatasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: {
+            display: true, position: 'top',
+            labels: { color: '#8b91a0', font: { family: 'DM Mono', size: 11 },
+              boxWidth: 12, padding: 16 }
+          },
+          tooltip: {
+            backgroundColor: '#181c23', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+            titleColor: '#8b91a0', bodyFont: { family: 'DM Mono', size: 12 },
+            callbacks: {
+              label: c => ` ${c.dataset.label}: ${c.raw >= 0 ? '+' : ''}${c.raw.toFixed(2)}%`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, border: { display: false },
+            ticks: { color: '#555c6e', font: { size: 11, family: 'DM Mono' }, maxTicksLimit: 6 } },
+          y: { position: 'right', border: { display: false },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#555c6e', font: { size: 11, family: 'DM Mono' },
+              callback: v => `${v >= 0 ? '+' : ''}${Number(v).toFixed(1)}%` } }
+        }
+      }
+    });
+    return () => { if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; } };
+  }, [datasets]);
+
+  return <canvas ref={canvasRef} />;
+}
+
+/* ─── Compare Panel ─── */
+function ComparePanel({ watchlist, apiKeys, hasFinnhubKey, hasAnthropicKey }) {
+  const COLORS = ['active-c1', 'active-c2', 'active-c3'];
+  const COLOR_HEX = ['#4ade80', '#22d3ee', '#a78bfa'];
+  const [selected,    setSelected]    = useState([watchlist[0]?.sym, watchlist[1]?.sym].filter(Boolean));
+  const [chartData,   setChartData]   = useState({});   // { SYM: { prices, labels } }
+  const [loading,     setLoading]     = useState({});
+  const [compareAI,   setCompareAI]   = useState('');
+  const [aiLoading,   setAiLoading]   = useState(false);
+  const [tfDays,      setTfDays]      = useState(30);
+  const [aiRanks,     setAiRanks]     = useState([]);
+
+  const toggleSym = (sym) => {
+    setSelected(prev => {
+      if (prev.includes(sym)) return prev.length > 1 ? prev.filter(s => s !== sym) : prev;
+      if (prev.length >= 3)   return [...prev.slice(1), sym];
+      return [...prev, sym];
+    });
+  };
+
+  // Fetch chart data for selected tickers
+  useEffect(() => {
+    if (!hasFinnhubKey) return;
+    selected.forEach(async sym => {
+      if (chartData[sym]) return; // already loaded
+      setLoading(l => ({...l, [sym]: true}));
+      try {
+        const to   = Math.floor(Date.now() / 1000), from = to - 400 * 86400;
+        const res  = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${sym}&resolution=D&from=${from}&to=${to}&token=${apiKeys.finnhub}`);
+        const d    = await res.json();
+        if (d.s === 'ok' && d.c?.length) {
+          setChartData(cd => ({...cd, [sym]: {
+            prices: d.c,
+            labels: d.t.map(ts => new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+          }}));
+        }
+      } catch {}
+      setLoading(l => ({...l, [sym]: false}));
+    });
+  }, [selected, hasFinnhubKey, apiKeys.finnhub]);
+
+  const datasets = selected
+    .filter(sym => chartData[sym])
+    .map(sym => ({ sym, ...chartData[sym] }));
+
+  const isLoading = selected.some(sym => loading[sym]);
+
+  const runCompareAI = async () => {
+    if (!hasAnthropicKey) return;
+    setAiLoading(true); setCompareAI('');
+    const stocks = selected.map(sym => {
+      const s = watchlist.find(w => w.sym === sym);
+      return s ? `${sym}: $${Number(s.price||0).toFixed(2)}, ${s.chg!=null?(s.chg>=0?'+':'')+Number(s.chg).toFixed(2)+'%':'N/A'} today` : sym;
+    }).join('\n');
+
+    const prompt = `You are a professional equity analyst. Compare these stocks for a retail investor:
+
+${stocks}
+
+Timeframe context: last ${tfDays} days
+
+Provide:
+1. A ranked recommendation (1st, 2nd, 3rd best opportunity right now) with brief reasoning per stock
+2. Key differentiator between them
+3. Which you would buy today and why
+
+Lead with RANKED: [SYM1], [SYM2], [SYM3] on the first line. Be concise and direct.`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKeys.anthropic,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 600,
+          messages: [{ role: 'user', content: prompt }] })
+      });
+      const data = await res.json();
+      const text = data.content?.[0]?.text || '';
+      // Parse ranked order from first line
+      const rankMatch = text.match(/RANKED:\s*([A-Z]+),\s*([A-Z]+)(?:,\s*([A-Z]+))?/);
+      if (rankMatch) setAiRanks([rankMatch[1], rankMatch[2], rankMatch[3]].filter(Boolean));
+      let i = 0;
+      const tick = setInterval(() => {
+        setCompareAI(text.slice(0, i)); i += 8;
+        if (i > text.length) { setCompareAI(text); clearInterval(tick); setAiLoading(false); }
+      }, 16);
+    } catch (err) { setCompareAI(`Error: ${err.message}`); setAiLoading(false); }
+  };
+
+  const TF_OPTIONS = [{ label: '1W', days: 7 }, { label: '1M', days: 30 }, { label: '3M', days: 90 }];
+
+  return (
+    <div>
+      {/* Ticker selector */}
+      <div className="compare-selector">
+        <span style={{fontSize:'12px',color:'var(--text3)',marginRight:'4px'}}>Compare:</span>
+        {watchlist.map((s, i) => {
+          const idx = selected.indexOf(s.sym);
+          return (
+            <button key={s.sym}
+              className={`compare-chip ${idx >= 0 ? COLORS[idx] : ''}`}
+              onClick={() => toggleSym(s.sym)}>
+              {s.sym}
+            </button>
+          );
+        })}
+        <span style={{fontSize:'11px',color:'var(--text3)',marginLeft:'auto'}}>Select up to 3</span>
+      </div>
+
+      {/* Timeframe selector */}
+      <div style={{display:'flex',gap:'6px',marginBottom:'16px'}}>
+        {TF_OPTIONS.map(tf => (
+          <button key={tf.label}
+            className={`tf-btn ${tfDays===tf.days?'active':''}`}
+            onClick={() => setTfDays(tf.days)}>
+            {tf.label}
+          </button>
+        ))}
+        <span style={{marginLeft:'auto',fontSize:'12px',color:'var(--text3)',alignSelf:'center'}}>
+          Normalized % return from same start date
+        </span>
+      </div>
+
+      {/* Normalized chart */}
+      <div className="card" style={{marginBottom:'20px'}}>
+        <div className="card-title">
+          Performance Comparison
+          <span style={{fontSize:'10px',fontWeight:400,color:'var(--text3)'}}>
+            {datasets.length > 0 ? `${datasets.map(d=>d.sym).join(' vs ')}` : 'select tickers above'}
+          </span>
+        </div>
+        <div className="compare-chart-wrap">
+          {isLoading ? (
+            <div style={{height:'280px',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text3)',fontSize:'13px'}}>
+              Loading chart data…
+            </div>
+          ) : datasets.length >= 2 ? (
+            <CompareChart datasets={datasets.map(d => ({
+              ...d,
+              prices: d.prices.slice(-tfDays),
+              labels: d.labels.slice(-tfDays),
+            }))} />
+          ) : (
+            <div style={{height:'280px',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text3)',fontSize:'13px'}}>
+              Select at least 2 tickers above to compare
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Side-by-side stat cards */}
+      {selected.length > 0 && (
+        <div className="compare-grid" style={{gridTemplateColumns:`repeat(${selected.length}, 1fr)`}}>
+          {selected.map((sym, i) => {
+            const stock  = watchlist.find(s => s.sym === sym);
+            const rankIdx = aiRanks.indexOf(sym);
+            const d = chartData[sym];
+            const perfPct = d && d.prices.length >= tfDays
+              ? ((d.prices[d.prices.length-1] - d.prices[d.prices.length - tfDays]) / d.prices[d.prices.length - tfDays] * 100)
+              : null;
+            return (
+              <div key={sym} className={`compare-card c${i+1}`}>
+                {rankIdx >= 0 && (
+                  <div className={`compare-rank r${rankIdx+1}`}>{rankIdx+1}</div>
+                )}
+                <div className="compare-ticker-sym" style={{color: COLOR_HEX[i]}}>{sym}</div>
+                <div className="compare-ticker-name">{stock?.name || sym}</div>
+                {[
+                  { label: 'Price',       val: stock?.price   != null ? `$${Number(stock.price).toFixed(2)}`   : '—' },
+                  { label: 'Today',       val: stock?.chg     != null ? `${stock.chg>=0?'+':''}${Number(stock.chg).toFixed(2)}%` : '—',
+                    cls: stock?.chg >= 0 ? 'pos' : 'neg' },
+                  { label: `${tfDays}d return`, val: perfPct != null ? `${perfPct>=0?'+':''}${perfPct.toFixed(2)}%` : '—',
+                    cls: perfPct >= 0 ? 'pos' : 'neg' },
+                  { label: 'Prev Close',  val: stock?.prevClose != null ? `$${Number(stock.prevClose).toFixed(2)}` : '—' },
+                ].map(({ label, val, cls }) => (
+                  <div key={label} className="compare-stat">
+                    <span className="compare-stat-label">{label}</span>
+                    <span className={`compare-stat-val ${cls||''}`}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* AI comparison */}
+      <div className="ai-panel">
+        <div className="ai-header">
+          <div className="ai-badge"><Icon.Spark />AI</div>
+          <div className="ai-title">
+            {selected.length >= 2 ? `${selected.join(' vs ')} — Comparison` : 'Select tickers to compare'}
+          </div>
+          {hasAnthropicKey && selected.length >= 2 && (
+            <button className="btn-primary" style={{fontSize:'12px',padding:'6px 14px'}}
+              onClick={runCompareAI} disabled={aiLoading}>
+              {aiLoading ? 'Analyzing…' : '⚡ Compare'}
+            </button>
+          )}
+          {!hasAnthropicKey && (
+            <span style={{fontSize:'12px',color:'var(--text3)'}}>Add Anthropic key for AI ranking</span>
+          )}
+        </div>
+        <div className={`ai-output ${aiLoading?'cursor':''}`}>
+          {compareAI ? (
+            compareAI.split('\n\n').map((para, i) => (
+              <p key={i} dangerouslySetInnerHTML={{__html: para
+                .replace(/BULLISH/g, '<span class="bull">▲ BULLISH</span>')
+                .replace(/BEARISH/g, '<span class="bear">▼ BEARISH</span>')
+                .replace(/RANKED:/g, '<strong>🏆 RANKED:</strong>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              }} />
+            ))
+          ) : aiLoading ? (
+            [90,75,85].map((w,i) => <div key={i} className="skeleton loading-bar" style={{width:`${w}%`}}></div>)
+          ) : (
+            <p style={{color:'var(--text3)'}}>
+              {selected.length >= 2
+                ? `Click "⚡ Compare" to get an AI-powered ranked analysis of ${selected.join(' vs ')}.`
+                : 'Select 2 or 3 tickers above to start a comparison.'}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main App ─── */
+function App() {
+  const [activeTab,     setActiveTab]     = useState('market');
+  const [activeTicker,  setActiveTicker]  = useState('AAPL');
+  const [timeframe,     setTimeframe]     = useState('1M');
+  const [watchlist,     setWatchlist]     = useState(DEFAULT_WATCHLIST);
+  const [showSettings,  setShowSettings]  = useState(false);
+  const [addingTicker,  setAddingTicker]  = useState(false);
+  const [newTicker,     setNewTicker]     = useState('');
+  const [searchQuery,   setSearchQuery]   = useState('');
+  const [aiQuery,       setAiQuery]       = useState('');
+  const [aiResponse,    setAiResponse]    = useState('');
+  const [aiLoading,     setAiLoading]     = useState(false);
+  const [liveNews,      setLiveNews]      = useState([]);
+  const [scoredNews,    setScoredNews]    = useState([]);
+  const [newsLoading,   setNewsLoading]   = useState(false);
+  const [sentimentLoading, setSentimentLoading] = useState(false);
+  const [newsError,     setNewsError]     = useState('');
+  const [liveChartData, setLiveChartData] = useState(null);
+  const [chartLoading,  setChartLoading]  = useState(false);
+  const [quoteLoading,  setQuoteLoading]  = useState(false);
+  const [quoteError,    setQuoteError]    = useState('');
+  const [dataSource,    setDataSource]    = useState('demo');
+  const [lastUpdated,   setLastUpdated]   = useState(null);
+  const [alerts,        setAlerts]        = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ml_alerts') || '[]'); } catch { return []; }
+  });
+  const [toasts,        setToasts]        = useState([]);
+
+  const [apiKeys, setApiKeys] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ml_keys') || '{}'); } catch { return {}; }
+  });
+
+  const hasAnthropicKey = !!(apiKeys.anthropic && apiKeys.anthropic.length > 10);
+  const hasFinnhubKey   = !!(apiKeys.finnhub   && apiKeys.finnhub.length   > 4);
+  const currentStock    = watchlist.find(s => s.sym === activeTicker) || watchlist[0];
+
+  const saveKeys = useCallback((keys) => {
+    setApiKeys(keys);
+    try { localStorage.setItem('ml_keys', JSON.stringify(keys)); } catch {}
+  }, []);
+
+  /* ── Alert dismissal ── */
+  const dismissToast = useCallback((id) => {
+    setToasts(t => t.filter(x => x.id !== id));
+  }, []);
+
+  /* ── Price alert polling — checks every 60s ── */
+  useEffect(() => {
+    if (!hasFinnhubKey) return;
+    const check = async () => {
+      const stored = JSON.parse(localStorage.getItem('ml_alerts') || '[]');
+      const untriggered = stored.filter(a => !a.triggered);
+      if (!untriggered.length) return;
+      for (const alert of untriggered) {
+        try {
+          const q = await fetchQuote(alert.sym, apiKeys.finnhub);
+          const hit = alert.direction === 'above'
+            ? q.price >= alert.target
+            : q.price <= alert.target;
+          if (hit) {
+            // Mark as triggered in storage
+            const updated = stored.map(a => a.id === alert.id ? { ...a, triggered: true } : a);
+            localStorage.setItem('ml_alerts', JSON.stringify(updated));
+            setAlerts(updated);
+            // Show toast
+            const toast = { id: Date.now(), sym: alert.sym, target: alert.target, direction: alert.direction, currentPrice: q.price };
+            setToasts(t => [...t, toast]);
+            // Auto-dismiss toast after 8s
+            setTimeout(() => setToasts(t => t.filter(x => x.id !== toast.id)), 8000);
+          }
+        } catch {}
+      }
+    };
+    // Check immediately then every 60s
+    check();
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, [apiKeys.finnhub, hasFinnhubKey]);
+
+  /* ── Quote + Chart ── */
+  useEffect(() => {
+    if (!hasFinnhubKey) { setDataSource('demo'); return; }
+    let cancelled = false;
+    const load = async () => {
+      setQuoteLoading(true); setChartLoading(true); setQuoteError('');
+      let livePrice = null; // will be set after quote fetch, used to pin chart to current price
+      try {
+        const q = await fetchQuote(activeTicker, apiKeys.finnhub);
+        if (!cancelled) {
+          livePrice = q.price;
+          setWatchlist(wl => wl.map(s => s.sym === activeTicker ? { ...s, ...q } : s));
+          setDataSource('live'); setLastUpdated(new Date());
+        }
+      } catch (err) { if (!cancelled) { setQuoteError(err.message); setDataSource('demo'); } }
+      finally       { if (!cancelled) setQuoteLoading(false); }
+      try {
+        const chart = await fetchChart(activeTicker, apiKeys.finnhub);
+        if (!cancelled) {
+          // Append today's live price so the chart reflects the current quote
+          const todayLabel = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const lastLabel  = chart.labels[chart.labels.length - 1];
+          // Only append if today isn't already the last candle
+          if (lastLabel !== todayLabel && livePrice != null) {
+            chart.prices.push(livePrice);
+            chart.labels.push(todayLabel);
+            chart.timestamps.push(Math.floor(Date.now() / 1000));
+          } else if (livePrice != null) {
+            // Update the last candle to the live price
+            chart.prices[chart.prices.length - 1] = livePrice;
+          }
+          setLiveChartData(chart);
+        }
+      } catch { if (!cancelled) setLiveChartData(null); }
+      finally  { if (!cancelled) setChartLoading(false); }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [activeTicker, apiKeys.finnhub, hasFinnhubKey]);
+
+  /* ── News + Auto-sentiment scoring ── */
+  useEffect(() => {
+    if (!hasFinnhubKey) { setLiveNews([]); setScoredNews([]); return; }
+    let cancelled = false;
+    const load = async () => {
+      setNewsLoading(true); setNewsError(''); setScoredNews([]);
+      try {
+        const articles = await fetchNews(activeTicker, apiKeys.finnhub);
+        if (cancelled) return;
+        setLiveNews(articles);
+        // Mark all as "scoring" initially
+        setScoredNews(articles.map(a => ({ ...a, sentiment: null })));
+
+        // Auto-score if Anthropic key is present
+        if (hasAnthropicKey && articles.length > 0) {
+          setSentimentLoading(true);
+          try {
+            const scored = await scoreNewsSentiment(articles, activeTicker, apiKeys.anthropic);
+            if (!cancelled) setScoredNews(scored);
+          } catch { if (!cancelled) setScoredNews(articles); }
+          finally  { if (!cancelled) setSentimentLoading(false); }
+        } else {
+          setScoredNews(articles);
+        }
+      } catch (err) { if (!cancelled) { setNewsError(err.message); setLiveNews([]); setScoredNews([]); } }
+      finally       { if (!cancelled) setNewsLoading(false); }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [activeTicker, apiKeys.finnhub, apiKeys.anthropic, hasFinnhubKey, hasAnthropicKey]);
+
+  /* ── Background watchlist quotes ── */
+  useEffect(() => {
+    if (!hasFinnhubKey) return;
+    const others = watchlist.filter(s => s.sym !== activeTicker && s.price === null);
+    const timers = others.map((s, i) =>
+      setTimeout(async () => {
+        try {
+          const q = await fetchQuote(s.sym, apiKeys.finnhub);
+          setWatchlist(wl => wl.map(w => w.sym === s.sym ? { ...w, ...q } : w));
+        } catch {}
+      }, (i + 1) * 3000)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [apiKeys.finnhub, hasFinnhubKey]);
+
+  /* ── AI Analysis ── */
+  const runAIAnalysis = useCallback(async (query) => {
+    if (!hasAnthropicKey) { setShowSettings(true); return; }
+    const question = query || `Analyze ${activeTicker}. Give a concise investment thesis with key catalysts, risks, and a BULLISH, BEARISH, or NEUTRAL verdict.`;
+    setAiLoading(true); setAiResponse('');
+
+    const newsCtx = scoredNews.length > 0
+      ? scoredNews.slice(0, 6).map(n => `- [${(n.sentiment || 'unscored').toUpperCase()}${n.sentimentScore ? ' ' + n.sentimentScore : ''}] ${n.headline} (${n.source}, ${n.time})`).join('\n')
+      : 'No live news available.';
+
+    const prompt = `You are a professional equity analyst.
+
+Ticker: ${activeTicker} (${currentStock.name})
+Price: ${fmt$(currentStock.price)} | Change: ${fmtPct(currentStock.chg)}
+${currentStock.high ? `High: ${fmt$(currentStock.high)} | Low: ${fmt$(currentStock.low)} | Prev close: ${fmt$(currentStock.prevClose)}` : ''}
+Data: ${dataSource === 'live' ? 'Live Finnhub data' : 'Demo data'}
+
+Scored news (sentiment + confidence):
+${newsCtx}
+
+Question: ${question}
+
+Respond in 2-3 focused paragraphs. Lead with BULLISH, BEARISH, or NEUTRAL. Reference specific scored headlines to support your thesis. Be direct and actionable.`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKeys.anthropic,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 700,
+          messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const data = await res.json();
+      const text = data.content?.[0]?.text || 'No response received.';
+      let i = 0;
+      const tick = setInterval(() => {
+        setAiResponse(text.slice(0, i)); i += 8;
+        if (i > text.length) { setAiResponse(text); clearInterval(tick); setAiLoading(false); }
+      }, 16);
+    } catch (err) { setAiResponse(`Error: ${err.message}`); setAiLoading(false); }
+  }, [activeTicker, apiKeys, hasAnthropicKey, currentStock, scoredNews, dataSource]);
+
+  /* ── Add ticker ── */
+  const addToWatchlist = () => {
+    if (!newTicker.trim()) { setAddingTicker(false); return; }
+    const sym = newTicker.trim().toUpperCase();
+    if (!watchlist.find(w => w.sym === sym)) {
+      setWatchlist(wl => [...wl, { sym, name: sym, price: null, chg: null }]);
+      if (hasFinnhubKey) setTimeout(async () => {
+        try {
+          const q = await fetchQuote(sym, apiKeys.finnhub);
+          setWatchlist(wl => wl.map(s => s.sym === sym ? { ...s, ...q } : s));
+        } catch {}
+      }, 500);
+    }
+    setNewTicker(''); setAddingTicker(false);
+  };
+
+  const filteredWatchlist = searchQuery
+    ? watchlist.filter(s => s.sym.includes(searchQuery.toUpperCase()) || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : watchlist;
+
+  // Correlation pins for chart
+  const chartPins = scoredNews.filter(n => n.sentiment && n.sentiment !== 'neutral').slice(0, 6);
+  const bullCount = scoredNews.filter(n => n.sentiment === 'bullish').length;
+  const bearCount = scoredNews.filter(n => n.sentiment === 'bearish').length;
+
+  /* ── Render ── */
+  return (
+    <div className="app">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-mark">
+            <div className="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="logo-name">MarketLens</span>
+          </div>
+          <div className="logo-tagline">AI Investment Intelligence</div>
+        </div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Navigation</div>
+          {[
+            { id: 'market',    label: 'Market Overview', Ico: Icon.Chart },
+            { id: 'portfolio', label: 'My Portfolio',    Ico: Icon.Portfolio },
+            { id: 'alerts',    label: `Alerts${alerts.filter(a=>!a.triggered).length > 0 ? ' ('+alerts.filter(a=>!a.triggered).length+')' : ''}`, Ico: Icon.Bell },
+            { id: 'compare',   label: 'Compare',         Ico: Icon.Chart },
+            { id: 'ai',        label: 'AI Analysis',     Ico: Icon.AI },
+          ].map(({ id, label, Ico }) => (
+            <button key={id} className={`nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
+              <Ico />{label}
+            </button>
+          ))}
+          <button className="nav-item" onClick={() => setShowSettings(true)}>
+            <Icon.Settings />API Settings
+          </button>
+        </div>
+
+        <div className="sidebar-section" style={{flex:1}}>
+          <div className="sidebar-label" style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 8px',marginBottom:'6px'}}>
+            <span>Watchlist</span>
+            {dataSource === 'live' && <span style={{color:'var(--accent)',fontSize:'9px',fontWeight:600}}>● LIVE</span>}
+          </div>
+          <div className="watchlist-items">
+            {filteredWatchlist.map(s => (
+              <div key={s.sym} className={`watchlist-ticker ${activeTicker === s.sym ? 'active' : ''}`}
+                onClick={() => { setActiveTicker(s.sym); setAiResponse(''); setLiveChartData(null); setScoredNews([]); setActiveTab('market'); }}>
+                <div className="ticker-left">
+                  <span className="ticker-sym">{s.sym}</span>
+                  <span className="ticker-name">{s.name.split(' ').slice(0,2).join(' ')}</span>
+                </div>
+                <div className="ticker-right">
+                  {s.price != null ? (
+                    <>
+                      <span className={`ticker-price ${(s.chg||0)>=0?'pos':'neg'}`}>{fmt$(s.price)}</span>
+                      <span className={`ticker-chg  ${(s.chg||0)>=0?'pos':'neg'}`}>{fmtPct(s.chg)}</span>
+                    </>
+                  ) : <span style={{color:'var(--text3)',fontSize:'11px'}}>{hasFinnhubKey?'loading…':'—'}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+          {addingTicker ? (
+            <input autoFocus className="add-ticker-input" placeholder="TICKER…" maxLength={6}
+              value={newTicker} onChange={e => setNewTicker(e.target.value.toUpperCase())}
+              onKeyDown={e => { if (e.key==='Enter') addToWatchlist(); if (e.key==='Escape') setAddingTicker(false); }}
+              onBlur={addToWatchlist} />
+          ) : (
+            <button className="add-ticker-btn" onClick={() => setAddingTicker(true)}><Icon.Plus />Add ticker</button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main */}
+      <main className="main">
+        {/* Topbar */}
+        <div className="topbar">
+          <div className="search-wrap">
+            <Icon.Search />
+            <input className="search-input" placeholder="Search tickers, companies…"
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          </div>
+          <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+            <div className="api-status">
+              <div className="status-dot" style={{background:hasAnthropicKey?'var(--accent)':'var(--amber)'}}></div>
+              {hasAnthropicKey?'AI':'No AI'}
+            </div>
+            <div className="api-status">
+              <div className="status-dot" style={{background:hasFinnhubKey?'var(--accent2)':'var(--text3)'}}></div>
+              {hasFinnhubKey?(quoteLoading?'Fetching…':'Prices'):'No Prices'}
+            </div>
+            <div className="api-status">
+              <div className="status-dot" style={{background:hasFinnhubKey?'var(--purple)':'var(--text3)'}}></div>
+              {hasFinnhubKey?(newsLoading?'Loading…':sentimentLoading?'Scoring…':'News'):'No News'}
+            </div>
+          </div>
+          <button className="btn-primary" style={{fontSize:'12px',padding:'7px 14px'}}
+            onClick={() => { setActiveTab('ai'); runAIAnalysis(); }} disabled={aiLoading}>
+            {aiLoading?'Analyzing…':'⚡ Analyze'}
+          </button>
+        </div>
+
+        <div className="content">
+          {quoteError && (
+            <div style={{background:'rgba(248,113,113,0.1)',border:'1px solid rgba(248,113,113,0.2)',borderRadius:'var(--radius)',padding:'10px 14px',marginBottom:'16px',fontSize:'12px',color:'var(--red)',display:'flex',justifyContent:'space-between'}}>
+              <span>⚠ Prices: {quoteError}</span><span style={{color:'var(--text3)'}}>Showing demo chart</span>
+            </div>
+          )}
+          {newsError && (
+            <div style={{background:'rgba(248,113,113,0.1)',border:'1px solid rgba(248,113,113,0.2)',borderRadius:'var(--radius)',padding:'10px 14px',marginBottom:'16px',fontSize:'12px',color:'var(--red)'}}>
+              ⚠ News: {newsError}
+            </div>
+          )}
+
+          {/* Main tab navigation */}
+          <div className="main-tabs">
+            {[
+              { id:'market',    label:'Market Overview' },
+              { id:'portfolio', label:'Portfolio' },
+              { id:'alerts',    label:`Alerts${alerts.filter(a=>!a.triggered).length > 0 ? ' ('+alerts.filter(a=>!a.triggered).length+')' : ''}` },
+              { id:'compare',   label:'Compare' },
+              { id:'ai',        label:'AI Analysis' },
+            ].map(({ id, label }) => (
+              <button key={id} className={`main-tab ${activeTab===id?'active':''}`} onClick={() => setActiveTab(id)}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── MARKET TAB ── */}
+          {activeTab === 'market' && (
+            <>
+              {/* Metric cards */}
+              <div className="hero-grid">
+                <div className="metric-card">
+                  <div className="metric-label" style={{display:'flex',justifyContent:'space-between'}}>
+                    <span>Current Price</span>
+                    {quoteLoading && <span style={{color:'var(--accent2)',fontSize:'10px'}}>updating…</span>}
+                    {lastUpdated && !quoteLoading && <span style={{color:'var(--text3)',fontSize:'10px'}}>{timeAgo(lastUpdated)}</span>}
+                  </div>
+                  {currentStock.price != null ? (
+                    <>
+                      <div className="metric-value" style={{color:(currentStock.chg||0)>=0?'var(--accent)':'var(--red)'}}>
+                        {fmt$(currentStock.price)}
+                      </div>
+                      <div className={`metric-sub ${(currentStock.chg||0)>=0?'pos':'neg'}`}>
+                        {(currentStock.chg||0)>=0?'▲':'▼'} {Math.abs(currentStock.chg||0).toFixed(2)}% today
+                      </div>
+                    </>
+                  ) : (
+                    <div className="metric-value" style={{color:'var(--text3)',fontSize:'16px'}}>
+                      {hasFinnhubKey?'Loading…':'Add Finnhub key'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="metric-card">
+                  <div className="metric-label">Today's Range</div>
+                  {currentStock.high && currentStock.low ? (
+                    <>
+                      <div className="metric-value" style={{fontSize:'16px',color:'var(--text)'}}>
+                        {fmt$(currentStock.low)} – {fmt$(currentStock.high)}
+                      </div>
+                      <div className="metric-sub" style={{color:'var(--text3)'}}>
+                        Prev close {fmt$(currentStock.prevClose)}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="metric-value" style={{color:'var(--text3)',fontSize:'16px'}}>
+                      {(currentStock.chg||0)>=0?'▲ Bullish':'▼ Bearish'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="metric-card">
+                  <div className="metric-label">News Sentiment</div>
+                  {scoredNews.filter(n=>n.sentiment).length > 0 ? (
+                    <>
+                      <div className="metric-value" style={{fontSize:'18px',color: bullCount > bearCount ? 'var(--accent)' : bearCount > bullCount ? 'var(--red)' : 'var(--amber)'}}>
+                        {bullCount > bearCount ? '▲ Bullish' : bearCount > bullCount ? '▼ Bearish' : '● Neutral'}
+                      </div>
+                      <div className="metric-sub" style={{color:'var(--text3)'}}>
+                        {bullCount}↑ {bearCount}↓ from {scoredNews.length} articles
+                      </div>
+                    </>
+                  ) : (
+                    <div className="metric-value" style={{color:'var(--text3)',fontSize:'16px'}}>
+                      {sentimentLoading ? 'Scoring…' : liveNews.length > 0 ? 'Pending' : '—'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Chart + News */}
+              <div className="dashboard-grid">
+                <div className="card">
+                  <div className="chart-header">
+                    <div>
+                      <div className="chart-ticker">{activeTicker}</div>
+                      <div style={{color:'var(--text2)',fontSize:'13px'}}>{currentStock.name}</div>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      {currentStock.price != null ? (
+                        <>
+                          <div className={`chart-price ${(currentStock.chg||0)>=0?'pos':'neg'}`}>{fmt$(currentStock.price)}</div>
+                          <div className={`chart-chg  ${(currentStock.chg||0)>=0?'pos':'neg'}`}>{fmtPct(currentStock.chg)}</div>
+                        </>
+                      ) : <div style={{color:'var(--text3)',fontSize:'13px'}}>{hasFinnhubKey?'Loading…':'Demo mode'}</div>}
+                    </div>
+                  </div>
+
+                  <div className="timeframes" style={{marginBottom:'16px'}}>
+                    {['1W','1M','3M','6M','1Y'].map(tf=>(
+                      <button key={tf} className={`tf-btn ${timeframe===tf?'active':''}`} onClick={()=>setTimeframe(tf)}>{tf}</button>
+                    ))}
+                    {liveChartData && <span style={{fontSize:'11px',color:'var(--accent)',marginLeft:'8px'}}>● live</span>}
+                  </div>
+
+                  <div className="chart-container">
+                    {chartLoading ? (
+                      <div style={{height:'240px',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text3)',fontSize:'13px'}}>Loading chart…</div>
+                    ) : (
+                      <PriceChart ticker={activeTicker} timeframe={timeframe}
+                        liveChartData={liveChartData} currentStock={currentStock} scoredNews={scoredNews} />
+                    )}
+                  </div>
+
+                  {/* Correlation pins */}
+                  {chartPins.length > 0 && (
+                    <div className="chart-pins">
+                      {chartPins.map((n, i) => (
+                        <span key={i} className={`chart-pin ${n.sentiment==='bullish'?'bull':'bear'}`}
+                          title={n.headline}
+                          onClick={() => n.url && window.open(n.url, '_blank')}>
+                          {n.sentiment==='bullish'?'▲':'▼'} {n.source}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* News feed with sentiment */}
+                <div className="card">
+                  <div className="card-title">
+                    Recent News
+                    <span style={{color:liveNews.length>0?'var(--accent)':'var(--text3)',fontSize:'10px',fontWeight:400}}>
+                      {liveNews.length>0?`${liveNews.length} live`:hasFinnhubKey?'loading…':'demo'}
+                      {sentimentLoading?' · scoring…':''}
+                    </span>
+                  </div>
+                  {newsLoading ? (
+                    [1,2,3].map(i=><div key={i} className="skeleton loading-bar" style={{height:'70px',marginBottom:'10px'}}></div>)
+                  ) : scoredNews.length > 0 ? (
+                    scoredNews.slice(0,6).map((n,i)=>(
+                      <div key={i} className="news-item" onClick={()=>n.url&&window.open(n.url,'_blank')}>
+                        <div className="news-meta">
+                          <span style={{color:'var(--accent2)'}}>{n.source}</span>
+                          <span>{n.time}</span>
+                        </div>
+                        <div className="news-headline">{n.headline}</div>
+                        <div style={{display:'flex',gap:'6px',marginTop:'5px'}}>
+                          <SentimentBadge sentiment={n.sentiment} score={n.sentimentScore} />
+                          <span style={{background:'rgba(34,211,238,0.1)',color:'var(--accent2)',borderRadius:'4px',padding:'2px 8px',fontSize:'10px',fontWeight:600}}>LIVE ↗</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{color:'var(--text3)',fontSize:'13px',padding:'20px 0',textAlign:'center'}}>
+                      {hasFinnhubKey?'No articles found':'Add your Finnhub key in API Settings'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Watchlist table */}
+              <div className="card">
+                <div className="card-title">Watchlist Overview</div>
+                <table className="port-table">
+                  <thead>
+                    <tr><th>Ticker</th><th>Price</th><th>Change</th><th>Signal</th><th>Prev Close</th></tr>
+                  </thead>
+                  <tbody>
+                    {watchlist.map(s=>(
+                      <tr key={s.sym} onClick={()=>setActiveTicker(s.sym)} style={{cursor:'pointer'}}>
+                        <td><div style={{fontWeight:500}}>{s.sym}</div><div style={{fontSize:'11px',color:'var(--text3)'}}>{s.name.split(' ').slice(0,2).join(' ')}</div></td>
+                        <td>{s.price!=null?fmt$(s.price):<span style={{color:'var(--text3)'}}>—</span>}</td>
+                        <td className={(s.chg||0)>=0?'pos':'neg'}>{s.chg!=null?fmtPct(s.chg):'—'}</td>
+                        <td><span style={{color:(s.chg||0)>=0?'var(--accent)':'var(--red)',fontSize:'11px'}}>
+                          {s.chg!=null?((s.chg||0)>=0?'▲ Bullish':'▼ Bearish'):'—'}
+                        </span></td>
+                        <td style={{color:'var(--text2)',fontSize:'12px'}}>{s.prevClose?fmt$(s.prevClose):'—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {/* ── PORTFOLIO TAB ── */}
+          {activeTab === 'portfolio' && (
+            <PortfolioPanel watchlist={watchlist} apiKeys={apiKeys} />
+          )}
+
+          {/* ── ALERTS TAB ── */}
+          {activeTab === 'alerts' && (
+            <AlertsPanel watchlist={watchlist} alerts={alerts} setAlerts={setAlerts} />
+          )}
+
+          {/* ── COMPARE TAB ── */}
+          {activeTab === 'compare' && (
+            <ComparePanel
+              watchlist={watchlist}
+              apiKeys={apiKeys}
+              hasFinnhubKey={hasFinnhubKey}
+              hasAnthropicKey={hasAnthropicKey}
+            />
+          )}
+
+          {/* ── AI TAB ── */}
+          {activeTab === 'ai' && (
+            <div className="ai-panel">
+              <div className="ai-header">
+                <div className="ai-badge"><Icon.Spark />AI</div>
+                <div className="ai-title">{activeTicker} Investment Analysis</div>
+                <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                  {scoredNews.filter(n=>n.sentiment).length > 0 && (
+                    <span style={{fontSize:'11px',color:'var(--accent)',background:'rgba(74,222,128,0.1)',padding:'3px 8px',borderRadius:'4px'}}>
+                      {bullCount}↑ {bearCount}↓ sentiment fed to AI
+                    </span>
+                  )}
+                  {!hasAnthropicKey && (
+                    <button className="btn-secondary" style={{fontSize:'12px',padding:'5px 12px'}} onClick={()=>setShowSettings(true)}>
+                      Connect API →
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className={`ai-output ${aiLoading?'cursor':''}`}>
+                {aiResponse ? (
+                  aiResponse.split('\n\n').map((para,i)=>(
+                    <p key={i} dangerouslySetInnerHTML={{__html:para
+                      .replace(/BULLISH/g,'<span class="bull">▲ BULLISH</span>')
+                      .replace(/BEARISH/g,'<span class="bear">▼ BEARISH</span>')
+                      .replace(/NEUTRAL/g,'<strong>● NEUTRAL</strong>')
+                      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+                    }}/>
+                  ))
+                ) : aiLoading ? (
+                  [90,75,85].map((w,i)=><div key={i} className="skeleton loading-bar" style={{width:`${w}%`}}></div>)
+                ) : (
+                  <p style={{color:'var(--text3)'}}>
+                    {hasAnthropicKey
+                      ?`Click "⚡ Analyze" for an AI-powered analysis of ${activeTicker}${scoredNews.filter(n=>n.sentiment).length>0?` — ${scoredNews.filter(n=>n.sentiment).length} scored headlines ready`:''}.`
+                      :'Connect your Anthropic API key in Settings to enable AI analysis.'}
+                  </p>
+                )}
+              </div>
+              <div className="ai-prompt-area">
+                <input className="ai-input"
+                  placeholder={`Ask about ${activeTicker}… e.g. "What's the biggest risk right now?"`}
+                  value={aiQuery} onChange={e=>setAiQuery(e.target.value)}
+                  onKeyDown={e=>{ if(e.key==='Enter'&&aiQuery.trim()){ runAIAnalysis(aiQuery); setAiQuery(''); } }} />
+                <button className="ai-submit" disabled={aiLoading||!aiQuery.trim()}
+                  onClick={()=>{ runAIAnalysis(aiQuery); setAiQuery(''); }}>Ask AI</button>
+              </div>
+            </div>
+          )}
+
+          <div style={{height:'40px'}}></div>
+        </div>
+      </main>
+
+      {showSettings && (
+        <SettingsModal
+          savedKeys={{ anthropic:'', finnhub:'', ...apiKeys }}
+          onSave={saveKeys}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      <Toast toasts={toasts} dismiss={dismissToast} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
