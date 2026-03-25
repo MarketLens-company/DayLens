@@ -96,6 +96,8 @@ let quoteHandlers = [];
 let wsConnected = false;
 let subscribedSymbols = new Set();
 let reconnectTimer = null;
+let reconnectDelay = 5000;   // starts at 5s, backs off on errors
+let suppressReconnect = false; // set true on 406 to pause the loop
 
 function onQuote(fn) {
   quoteHandlers.push(fn);
@@ -169,15 +171,30 @@ function connectStream() {
         }
       } else if (msg.T === 'error') {
         console.error('[Alpaca WS] Error:', msg);
+        if (msg.code === 406) {
+          // Connection limit exceeded — another instance is connected.
+          // Suppress reconnect loop for 60s to let the other connection expire.
+          suppressReconnect = true;
+          reconnectDelay = 60000;
+          console.warn('[Alpaca WS] Connection limit hit — pausing reconnect for 60s');
+          setTimeout(() => {
+            suppressReconnect = false;
+            reconnectDelay = 5000;
+          }, 60000);
+        }
       }
     }
   });
 
   wsClient.on('close', () => {
     wsConnected = false;
-    console.log('[Alpaca WS] Disconnected. Reconnecting in 5s...');
+    if (suppressReconnect) {
+      console.log(`[Alpaca WS] Disconnected. Reconnecting in ${reconnectDelay / 1000}s (backoff)...`);
+    } else {
+      console.log('[Alpaca WS] Disconnected. Reconnecting in 5s...');
+    }
     clearTimeout(reconnectTimer);
-    reconnectTimer = setTimeout(connectStream, 5000);
+    reconnectTimer = setTimeout(connectStream, reconnectDelay);
   });
 
   wsClient.on('error', err => {
