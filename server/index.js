@@ -82,6 +82,21 @@ server.listen(PORT, async () => {
     console.warn('[Startup] Market data init error:', err.message);
   }
 
+  // Purge watchlist symbols that returned no bar data (delisted / unsupported tickers)
+  const allSymbols = db.getWatchlist();
+  const purged = [];
+  for (const sym of allSymbols) {
+    const bars = marketData.getBars(sym, '5Min');
+    if (bars.length === 0) {
+      db.removeFromWatchlist(sym);
+      marketData.removeSymbol(sym);
+      purged.push(sym);
+    }
+  }
+  if (purged.length) {
+    console.log(`[Startup] Purged ${purged.length} symbol(s) with no market data: ${purged.join(', ')}`);
+  }
+
   // Start Alpaca WebSocket stream
   alpaca.startStream();
 

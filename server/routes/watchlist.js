@@ -22,6 +22,17 @@ router.post('/', async (req, res) => {
   } else {
     db.addToWatchlist(sym);
     await marketData.addSymbol(sym);
+
+    // Validate the symbol actually has market data (catches delisted / unsupported tickers)
+    const bars = marketData.getBars(sym, '5Min');
+    if (bars.length === 0) {
+      db.removeFromWatchlist(sym);
+      marketData.removeSymbol(sym);
+      return res.status(400).json({
+        error: `No market data found for ${sym}. It may be delisted, misspelled, or not supported on the IEX feed.`,
+      });
+    }
+
     autoTrader.addSymbol(sym);
   }
 

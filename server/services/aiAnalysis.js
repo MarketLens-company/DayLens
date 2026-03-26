@@ -4,7 +4,9 @@ require('dotenv').config();
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const MODEL = 'claude-sonnet-4-20250514';
+// Use Haiku for routine per-symbol analysis (fast + ~4x cheaper than Sonnet).
+// Sonnet is reserved for the screener which does broader market reasoning.
+const MODEL = 'claude-haiku-3-5-20241022';
 
 /**
  * Ask Claude to analyze a stock and return a structured trading decision.
