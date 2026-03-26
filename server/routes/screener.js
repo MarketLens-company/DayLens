@@ -37,8 +37,9 @@ router.get('/universe', (req, res) => {
   res.json({ universe, total: universe.length });
 });
 
-// POST /api/screener/config — update screener config
+// POST /api/screener/config — update screener config for this user
 router.post('/config', (req, res) => {
+  const userId = req.userId || 1;
   const { interval_min, auto_add_picks, max_dynamic_symbols } = req.body;
   const updates = {};
 
@@ -56,7 +57,7 @@ router.post('/config', (req, res) => {
     return res.status(400).json({ error: 'No valid config keys provided' });
   }
 
-  db.setConfigBulk(updates);
+  db.setConfigBulkForUser(userId, updates);
   res.json({ ok: true, updated: updates });
 });
 

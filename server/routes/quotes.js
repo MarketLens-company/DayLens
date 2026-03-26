@@ -1,15 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const marketData = require('../services/marketData');
-const { getDecisions } = require('../services/database');
+const marketDataGlobal = require('../services/marketData');
+const db = require('../services/database');
+
+function getMarketData(req) {
+  return req.userSession ? req.userSession.marketDataService : marketDataGlobal;
+}
 
 router.get('/:symbol', (req, res) => {
+  const userId = req.userId || 1;
   const symbol = req.params.symbol.toUpperCase();
+  const marketData = getMarketData(req);
+
   const quote = marketData.getQuote(symbol);
   const indicators = marketData.getIndicators(symbol);
 
-  // Get latest AI signal
-  const decisions = getDecisions({ symbol, limit: 1 });
+  // Get latest AI signal for this user
+  const decisions = db.getDecisions({ symbol, limit: 1, userId });
   const latestSignal = decisions[0] || null;
 
   res.json({

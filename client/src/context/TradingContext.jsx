@@ -20,11 +20,18 @@ export function TradingProvider({ children }) {
 
   // ---- Loaders ----
   const loadAccount = useCallback(async () => {
-    try { setAccount(await apiFetch('/account')); } catch {}
+    try {
+      const data = await apiFetch('/account');
+      // If API keys not configured, data has code NO_API_KEYS — don't set
+      if (!data.code) setAccount(data);
+    } catch {}
   }, []);
 
   const loadPositions = useCallback(async () => {
-    try { setPositions(await apiFetch('/positions')); } catch {}
+    try {
+      const data = await apiFetch('/positions');
+      if (Array.isArray(data)) setPositions(data);
+    } catch {}
   }, []);
 
   const loadWatchlist = useCallback(async () => {
@@ -44,7 +51,10 @@ export function TradingProvider({ children }) {
   }, []);
 
   const loadClock = useCallback(async () => {
-    try { setClock(await apiFetch('/account/clock')); } catch {}
+    try {
+      const data = await apiFetch('/account/clock');
+      if (!data.code) setClock(data);
+    } catch {}
   }, []);
 
   const loadQuoteForSymbol = useCallback(async symbol => {
@@ -65,6 +75,9 @@ export function TradingProvider({ children }) {
       case 'connected':
         setWsConnected(true);
         break;
+      case 'auth_ok':
+        // WS auth confirmed — nothing extra needed
+        break;
       case 'quote_update':
         setQuotes(q => ({ ...q, [msg.payload.symbol]: msg.payload }));
         break;
@@ -80,7 +93,6 @@ export function TradingProvider({ children }) {
         }));
         break;
       case 'order_fill':
-        // Refresh positions and account on fill
         loadPositions();
         loadAccount();
         break;

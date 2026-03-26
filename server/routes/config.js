@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../services/database');
-const autoTrader = require('../services/autoTrader');
 
 const ALLOWED_KEYS = [
   'auto_trade_enabled',
@@ -13,10 +12,14 @@ const ALLOWED_KEYS = [
 ];
 
 router.get('/', (req, res) => {
-  res.json(db.getRawConfig());
+  const userId = req.userId || 1;
+  res.json(db.getRawConfigForUser(userId));
 });
 
 router.post('/', (req, res) => {
+  const userId = req.userId || 1;
+  const session = req.userSession;
+
   const updates = {};
   for (const key of ALLOWED_KEYS) {
     if (req.body[key] !== undefined) {
@@ -28,19 +31,19 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'No valid config keys provided' });
   }
 
-  db.setConfigBulk(updates);
+  db.setConfigBulkForUser(userId, updates);
 
-  // If auto_trade_enabled changed, start/stop trader
-  if (updates.auto_trade_enabled !== undefined) {
+  // If auto_trade_enabled changed and user has a session, start/stop their auto-trader
+  if (updates.auto_trade_enabled !== undefined && session) {
     const enabled = String(updates.auto_trade_enabled) === 'true';
-    if (enabled && !autoTrader.isRunning()) {
-      autoTrader.start();
-    } else if (!enabled && autoTrader.isRunning()) {
-      autoTrader.stop();
+    if (enabled && !session.autoTraderService.isRunning()) {
+      session.autoTraderService.start();
+    } else if (!enabled && session.autoTraderService.isRunning()) {
+      session.autoTraderService.stop();
     }
   }
 
-  res.json({ ok: true, config: db.getRawConfig() });
+  res.json({ ok: true, config: db.getRawConfigForUser(userId) });
 });
 
 module.exports = router;

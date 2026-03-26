@@ -1,12 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const BASE = '/api';
+const TOKEN_KEY = 'daylens_token';
 
 export async function apiFetch(path, opts = {}) {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...opts,
+    // If opts has headers, merge them (opts.headers override defaults)
+    headers: { ...headers, ...(opts.headers || {}) },
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
@@ -19,7 +27,7 @@ export function useApi(path, deps = []) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetch = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!path) return;
     setLoading(true);
     try {
@@ -33,7 +41,7 @@ export function useApi(path, deps = []) {
     }
   }, [path]);
 
-  useEffect(() => { fetch(); }, [fetch, ...deps]);
+  useEffect(() => { fetchData(); }, [fetchData, ...deps]);
 
-  return { data, loading, error, refetch: fetch };
+  return { data, loading, error, refetch: fetchData };
 }
