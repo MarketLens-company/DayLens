@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DayLens — Institutional Trading Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/*
+ * ═══════════════════════════════════════════════════════════
+ * DAYLENS TOKEN SYSTEM v2
+ * Philosophy: Institutional fintech — Bloomberg structure,
+ *             modern fintech restraint. Deep blue-slate base.
+ * ═══════════════════════════════════════════════════════════
+ *
+ * BACKGROUNDS (4 depth levels)
+ *   --bg0 #0D1520  base — page background
+ *   --bg1 #121D2B  surface — panel backgrounds
+ *   --bg2 #18273A  raised — cards, hover targets
+ *   --bg3 #1E2F47  overlay — active / selected states
+ *
+ * BORDERS (blue-tinted white at low opacity)
+ *   --b0  rgba(112,162,210, 0.06)  barely-there dividers
+ *   --b1  rgba(112,162,210, 0.10)  default borders
+ *   --b2  rgba(112,162,210, 0.17)  emphasized
+ *   --b3  rgba(112,162,210, 0.25)  strong / focus
+ *
+ * SEMANTIC
+ *   --teal    #2DD4BF  gain · BUY · active CTA · profit
+ *   --crimson #D96B6B  loss · SELL · danger (muted, NOT #f00)
+ *   --amber   #E89A3C  caution · overbought · RSI warn
+ *
+ * TEXT (3-tier hierarchy)
+ *   --t0 #E8EDF2  primary — headings, key values
+ *   --t1 #8BA0B4  secondary — labels, body
+ *   --t2 #4C637A  muted — timestamps, metadata
+ *
+ * TYPOGRAPHY
+ *   UI labels / body:  Inter
+ *   ALL numeric data:  IBM Plex Mono + tabular-nums
+ * ═══════════════════════════════════════════════════════════
+ */
+:root{
+  --bg0:#0D1520;--bg1:#121D2B;--bg2:#18273A;--bg3:#1E2F47;
+  --b0:rgba(112,162,210,.06);--b1:rgba(112,162,210,.10);
+  --b2:rgba(112,162,210,.17);--b3:rgba(112,162,210,.25);
+  --teal:#2DD4BF;--ta12:rgba(45,212,191,.12);--ta06:rgba(45,212,191,.06);--ta03:rgba(45,212,191,.03);
+  --crimson:#D96B6B;--ca12:rgba(217,107,107,.12);--ca06:rgba(217,107,107,.06);
+  --amber:#E89A3C;--aa12:rgba(232,154,60,.12);
+  --t0:#E8EDF2;--t1:#8BA0B4;--t2:#4C637A;
+  --ui:'Inter',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg0);color:var(--t0);
+  font-family:var(--ui);font-size:13px;-webkit-font-smoothing:antialiased}
+
+/* ── ANIMATIONS ─────────────────────────────────────────── */
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(45,212,191,.45)}65%{box-shadow:0 0 0 6px rgba(45,212,191,0)}100%{box-shadow:0 0 0 0 rgba(45,212,191,0)}}
+@keyframes cin{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ROOT LAYOUT ─────────────────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* ── NAV ─────────────────────────────────────────────────── */
+nav{display:flex;align-items:center;height:44px;padding:0 18px;
+  background:var(--bg1);border-bottom:1px solid var(--b0);flex-shrink:0;gap:0}
+.logo{display:flex;align-items:center;gap:7px;margin-right:30px}
+.logo-♦{color:var(--teal);font-size:11px;line-height:1}
+.logo-name{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.03em}
+.nav-tabs{display:flex;align-items:stretch;height:100%}
+.ntab{display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:500;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--t2);
+  border-bottom:2px solid transparent;cursor:pointer;transition:color .14s;user-select:none}
+.ntab.on{color:var(--teal);border-bottom-color:var(--teal)}
+.ntab:hover:not(.on){color:var(--t1)}
+.nav-r{display:flex;align-items:center;gap:14px;margin-left:auto}
+.live-pill{display:flex;align-items:center;gap:6px}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--teal);
+  animation:pulse 2s ease-in-out infinite,ring 2.5s ease-out .5s infinite}
+.ltxt{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t2)}
+.vr{width:1px;height:16px;background:var(--b1)}
+.uchip{display:flex;align-items:center;gap:6px;padding:4px 9px 4px 5px;
+  background:var(--bg2);border:1px solid var(--b1);border-radius:6px;cursor:pointer;transition:border-color .14s}
+.uchip:hover{border-color:var(--b2)}
+.uav{width:21px;height:21px;border-radius:4px;background:var(--ta12);
+  border:1px solid rgba(45,212,191,.2);display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--teal)}
+.uname{font-size:12px;font-weight:500;color:var(--t1)}
+.logout{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--t2);cursor:pointer;transition:color .14s}
+.logout:hover{color:var(--crimson)}
+
+/* ── STATS BAR ───────────────────────────────────────────── */
+.sbar{display:flex;align-items:center;height:50px;padding:0 18px;
+  background:var(--bg1);border-bottom:1px solid var(--b0);flex-shrink:0}
+.mkt{display:flex;align-items:center;gap:10px;padding-right:20px;
+  border-right:1px solid var(--b0)}
+.mbadge{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:4px;
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.mbadge.open{background:var(--ta12);color:var(--teal);border:1px solid rgba(45,212,191,.18)}
+.mdot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.mtime{font-family:var(--mono);font-size:12px;color:var(--t2);letter-spacing:.04em}
+.stat{display:flex;flex-direction:column;justify-content:center;padding:0 18px;
+  border-right:1px solid var(--b0);gap:2px}
+.slbl{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t2)}
+.sval{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--t0);letter-spacing:.01em}
+.pnlstat{display:flex;flex-direction:column;justify-content:center;padding:0 18px;
+  border-right:1px solid var(--b0);gap:2px}
+.pnlrow{display:flex;align-items:baseline;gap:7px}
+.pnlv{font-family:var(--mono);font-size:19px;font-weight:600;letter-spacing:.01em;line-height:1}
+.pnlp{font-family:var(--mono);font-size:11px;opacity:.7}
+.up{color:var(--teal)}.dn{color:var(--crimson)}.amb{color:var(--amber)}
+.autowrap{display:flex;align-items:center;gap:11px;margin-left:auto;padding-left:18px}
+.autoinfo{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.autolbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t1)}
+.autosub{font-size:9px;color:var(--t2)}
+.tglwrap{display:flex;align-items:center;gap:7px;cursor:pointer}
+.tgl{position:relative;width:38px;height:20px;flex-shrink:0}
+.tgltrack{position:absolute;inset:0;border-radius:10px;
+  background:var(--ta12);border:1px solid rgba(45,212,191,.35);transition:background .2s,border-color .2s}
+.tglthumb{position:absolute;top:3px;width:14px;height:14px;border-radius:50%;
+  background:var(--teal);transform:translateX(20px);transition:transform .2s,background .2s}
+.tglstate{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--teal)}
+
+/* ── INDICATOR STRIP ─────────────────────────────────────── */
+.istrip{display:flex;align-items:center;height:34px;padding:0 18px;
+  background:var(--bg0);border-bottom:1px solid var(--b0);flex-shrink:0;overflow-x:auto}
+.istrip::-webkit-scrollbar{display:none}
+.iitem{display:flex;align-items:center;gap:6px;padding:0 10px;height:34px;
+  border-right:1px solid var(--b0);white-space:nowrap;flex-shrink:0}
+.iitem:first-child{padding-left:0}
+.ilbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t2)}
+.ival{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.02em}
+.ibadge{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.rbar{width:34px;height:3px;border-radius:2px;background:var(--bg3);overflow:hidden}
+.rfill{height:100%;border-radius:2px}
+.isep{width:1px;height:16px;background:var(--b1);margin:0 2px;flex-shrink:0}
+
+/* ── MAIN GRID ───────────────────────────────────────────── */
+.mgrid{display:flex;flex:1;min-height:0;overflow:hidden}
+
+/* ── WATCHLIST ───────────────────────────────────────────── */
+.wl{width:240px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--bg1);border-right:1px solid var(--b0);overflow:hidden}
+.ph{display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px 7px;border-bottom:1px solid var(--b0);flex-shrink:0}
+.ptitle{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--t2)}
+.pmeta{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.wllist{flex:1;overflow-y:auto}.wllist::-webkit-scrollbar{display:none}
+.wi{padding:10px 14px;border-bottom:1px solid var(--b0);cursor:pointer;
+  border-left:2px solid transparent;transition:background .12s,border-left-color .12s}
+.wi.sel{background:var(--ta06);border-left-color:var(--teal)}
+.wi:hover:not(.sel){background:var(--bg2)}
+.wr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.wsym-w{display:flex;align-items:center;gap:6px}
+.wsym{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--t0);letter-spacing:.05em}
+.sb{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:1px 5px;border-radius:3px;border:1px solid}
+.sb-buy{background:var(--ta12);color:var(--teal);border-color:rgba(45,212,191,.2)}
+.sb-sell{background:var(--ca12);color:var(--crimson);border-color:rgba(217,107,107,.2)}
+.sb-hold{background:var(--bg3);color:var(--t2);border-color:var(--b1)}
+.wchg{font-family:var(--mono);font-size:11px;font-weight:500}
+.wr2{display:flex;align-items:center;justify-content:space-between}
+.wprice{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--t0)}
+.wrt{display:flex;align-items:center;gap:8px}
+.wvol{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.cw{display:flex;align-items:center;gap:4px}
+.cb{width:28px;height:2px;background:var(--bg3);border-radius:1px;overflow:hidden}
+.cf{height:100%;border-radius:1px}
+.cpct{font-family:var(--mono);font-size:9px;color:var(--t2)}
+.wfoot{padding:10px;flex-shrink:0;border-top:1px solid var(--b0)}
+.runbtn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+  padding:9px 12px;background:var(--teal);color:#0D1520;font-family:var(--ui);
+  font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  border:none;border-radius:5px;cursor:pointer;transition:filter .14s,transform .1s}
+.runbtn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.runbtn:active{transform:translateY(0)}
+
+/* ── CENTER COLUMN ───────────────────────────────────────── */
+.col{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;
+  border-right:1px solid var(--b0)}
+.cpanel{flex:1;display:flex;flex-direction:column;min-height:0}
+.chard{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 8px;border-bottom:1px solid var(--b0);flex-shrink:0}
+.chl{display:flex;align-items:baseline;gap:10px}
+.chsym{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--t0);letter-spacing:.04em}
+.chprice{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--t0);
+  letter-spacing:-.01em;line-height:1}
+.chchg{font-family:var(--mono);font-size:12px;font-weight:500}
+.chr{display:flex;align-items:center;gap:5px}
+.bg{display:flex;gap:3px}
+.cbtn{padding:4px 8px;font-size:10px;font-weight:600;letter-spacing:.05em;border-radius:4px;
+  border:1px solid var(--b1);background:var(--bg2);color:var(--t2);cursor:pointer;transition:all .12s}
+.cbtn.on{background:var(--teal);color:#0D1520;border-color:var(--teal)}
+.cbtn:hover:not(.on){color:var(--t0);border-color:var(--b2)}
+.csep{width:1px;height:16px;background:var(--b1);align-self:center}
+.cref{width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--b1);background:var(--bg2);border-radius:4px;
+  color:var(--t2);font-size:13px;cursor:pointer}
+.cref:hover{color:var(--t0)}
+.cbody{flex:1;min-height:0;background:var(--bg0);position:relative}
+.cbody svg{width:100%;height:100%;display:block}
+
+/* Positions */
+.posp{height:162px;flex-shrink:0;display:flex;flex-direction:column;
+  border-top:1px solid var(--b0);background:var(--bg1)}
+.poshead{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px 6px;border-bottom:1px solid var(--b0);flex-shrink:0}
+.phl{display:flex;align-items:center;gap:8px}
+.pcnt{font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:3px;
+  background:var(--ta12);color:var(--teal);border:1px solid rgba(45,212,191,.18)}
+.posbody{flex:1;overflow-y:auto}.posbody::-webkit-scrollbar{display:none}
+table{width:100%;border-collapse:collapse}
+thead th{padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--t2);text-align:left;border-bottom:1px solid var(--b0)}
+tbody tr{border-bottom:1px solid var(--b0);transition:background .1s}
+tbody tr:hover{background:var(--ta06)}
+td{padding:8px 14px}
+.tdm{font-family:var(--mono);font-size:12px;color:var(--t1)}
+.tdpnl{font-family:var(--mono);font-size:13px;font-weight:600;text-align:right}
+.tdpsub{font-family:var(--mono);font-size:10px;opacity:.65}
+.symc{display:flex;align-items:center;gap:6px}
+.spill{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;
+  padding:2px 5px;border-radius:3px}
+.long{background:var(--ta12);color:var(--teal);border:1px solid rgba(45,212,191,.18)}
+.tdsym{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--t0)}
+
+/* Scanner */
+.scan{height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;border-top:1px solid var(--b0);background:var(--bg0);cursor:pointer;transition:background .12s}
+.scan:hover{background:var(--bg1)}
+.scanl{display:flex;align-items:center;gap:7px}
+.sdot{width:4px;height:4px;border-radius:50%;background:var(--teal);opacity:.5}
+.slbl{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2)}
+.scnt{font-family:var(--mono);font-size:10px;color:var(--teal)}
+.scanr{font-size:10px;color:var(--t2)}
+
+/* ── AI SIGNAL FEED ──────────────────────────────────────── */
+.aif{width:302px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--bg1);overflow:hidden}
+.aih{display:flex;align-items:center;gap:8px;padding:9px 14px 7px;
+  border-bottom:1px solid var(--b0);flex-shrink:0}
+.ailg{display:flex;align-items:center;gap:8px;flex:1}
+.alive{display:flex;align-items:center;gap:5px;padding:2px 7px;
+  background:var(--ta12);border:1px solid rgba(45,212,191,.18);border-radius:10px}
+.aild{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 1.8s ease-in-out infinite}
+.ailt{font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--teal)}
+.aicnt{font-family:var(--mono);font-size:10px;color:var(--t2);margin-left:auto}
+.aibody{flex:1;overflow-y:auto}
+.aibody::-webkit-scrollbar{width:3px}
+.aibody::-webkit-scrollbar-thumb{background:var(--b1);border-radius:2px}
+.ac{padding:12px 14px;border-bottom:1px solid var(--b0);border-left:2px solid transparent;
+  animation:cin .3s ease-out both;transition:background .12s}
+.ac:hover{background:var(--bg2)}
+.ac.buy{border-left-color:var(--teal);background:var(--ta03)}
+.ac.sell{border-left-color:var(--crimson);background:var(--ca06)}
+.ac.hold{border-left-color:var(--b2)}
+.ac.buy:hover{background:rgba(45,212,191,.08)}
+.ac.sell:hover{background:rgba(217,107,107,.09)}
+.ach{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.acl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.acsym{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--t0);letter-spacing:.04em}
+.acqty{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.actime{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.acconf{margin-bottom:8px}
+.acrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.aclbl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t2)}
+.acval{font-family:var(--mono);font-size:11px;font-weight:600}
+.actrack{height:3px;border-radius:2px;background:var(--bg3);overflow:hidden}
+.acfill{height:100%;border-radius:2px}
+.areason{font-size:11px;line-height:1.6;color:var(--t1);
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:7px}
+.acfoot{display:flex;gap:12px}
+.asl{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--crimson);opacity:.8}
+.atp{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--teal);opacity:.8}
+.aexec{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;color:var(--teal);margin-top:5px}
+.askip{font-family:var(--mono);font-size:10px;color:var(--t2);margin-top:5px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <span class="logo-♦">◆</span>
+    <span class="logo-name">DayLens</span>
+  </div>
+  <div class="nav-tabs">
+    <div class="ntab on">Dashboard</div>
+    <div class="ntab">Trade History</div>
+    <div class="ntab">Screener</div>
+    <div class="ntab">Settings</div>
+  </div>
+  <div class="nav-r">
+    <div class="live-pill"><div class="ldot"></div><span class="ltxt">Live</span></div>
+    <div class="vr"></div>
+    <div class="uchip"><div class="uav">M</div><span class="uname">mjschmitz09</span></div>
+    <span class="logout">Logout</span>
+  </div>
+</nav>
+
+<!-- STATS BAR -->
+<div class="sbar">
+  <div class="mkt">
+    <div class="mbadge open"><div class="mdot"></div> Open</div>
+    <span class="mtime" id="clock">ET 11:14:27</span>
+  </div>
+  <div class="stat" style="padding-left:18px">
+    <div class="slbl">Portfolio Equity</div>
+    <div class="sval">$101,247.83</div>
+  </div>
+  <div class="stat">
+    <div class="slbl">Buying Power</div>
+    <div class="sval">$198,430.22</div>
+  </div>
+  <div class="pnlstat">
+    <div class="slbl">Daily P&amp;L</div>
+    <div class="pnlrow">
+      <span class="pnlv up">+$1,247.83</span>
+      <span class="pnlp up">(+1.25%)</span>
+    </div>
+  </div>
+  <div class="autowrap">
+    <div class="autoinfo">
+      <span class="autolbl">Autonomous Trading</span>
+      <span class="autosub" id="asub">Active — orders execute automatically</span>
+    </div>
+    <div class="tglwrap" onclick="tog(this)">
+      <div class="tgl">
+        <div class="tgltrack" id="ttrack"></div>
+        <div class="tglthumb" id="tthumb"></div>
+      </div>
+      <span class="tglstate" id="tstate">ON</span>
+    </div>
+  </div>
+</div>
+
+<!-- INDICATOR STRIP -->
+<div class="istrip">
+  <div class="iitem">
+    <span class="ilbl">RSI (14)</span>
+    <div class="rbar"><div class="rfill" style="width:73%;background:#E89A3C"></div></div>
+    <span class="ival amb">73.4</span>
+    <span class="ibadge amb">Overbought</span>
+  </div>
+  <div class="iitem">
+    <span class="ilbl">MACD</span>
+    <span class="ival up">+0.0037</span>
+  </div>
+  <div class="isep"></div>
+  <div class="iitem">
+    <span class="ilbl">BB Upper</span>
+    <span class="ival amb">$257.95</span>
+  </div>
+  <div class="iitem">
+    <span class="ilbl">BB Lower</span>
+    <span class="ival amb">$252.99</span>
+  </div>
+  <div class="isep"></div>
+  <div class="iitem">
+    <span class="ilbl">EMA 9</span>
+    <span class="ival">$256.24</span>
+  </div>
+  <div class="iitem">
+    <span class="ilbl">EMA 21</span>
+    <span class="ival up">$255.35</span>
+  </div>
+  <div class="isep"></div>
+  <div class="iitem">
+    <span class="ilbl">Vol Ratio</span>
+    <span class="ival amb">1.25×</span>
+  </div>
+  <div class="iitem" style="border-right:none">
+    <span class="ilbl">Trend</span>
+    <span class="ival up">Bullish ↑</span>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="mgrid">
+
+  <!-- WATCHLIST -->
+  <div class="wl">
+    <div class="ph"><span class="ptitle">Watchlist</span><span class="pmeta">8 symbols</span></div>
+    <div class="wllist">
+      <div class="wi sel">
+        <div class="wr1"><div class="wsym-w"><span class="wsym">AAPL</span><span class="sb sb-hold">Hold</span></div><span class="wchg up">+1.92%</span></div>
+        <div class="wr2"><span class="wprice">$256.72</span><div class="wrt"><span class="wvol">879.9K</span><div class="cw"><div class="cb"><div class="cf" style="width:30%;background:var(--t2)"></div></div><span class="cpct">30%</span></div></div></div>
+      </div>
+      <div class="wi">
+        <div class="wr1"><div class="wsym-w"><span class="wsym">TSLA</span><span class="sb sb-buy">Buy</span></div><span class="wchg up">+0.51%</span></div>
+        <div class="wr2"><span class="wprice">$380.11</span><div class="wrt"><span class="wvol">490.1K</span><div class="cw"><div class="cb"><div class="cf" style="width:78%;background:var(--teal)"></div></div><span class="cpct">78%</span></div></div></div>
+      </div>
+      <div class="wi">
+        <div class="wr1"><div class="wsym-w"><span class="wsym">NVDA</span><span class="sb sb-hold">Hold</span></div><span class="wchg dn">−1.44%</span></div>
+        <div class="wr2"><span class="wprice">$173.97</span><div class="wrt"><span class="wvol">4.2M</span><div class="cw"><div class="cb"><div class="cf" style="width:30%;background:var(--t2)"></div></div><span class="cpct">30%</span></div></div></div>
+      </div>
+      <div class="wi">
+        <div class="wr1"><div class="wsym-w"><span class="wsym">MSFT</span><span class="sb sb-buy">Buy</span></div><span class="wchg up">+0.42%</span></div>
+        <div class="wr2"><span class="wprice">$370.27</span><div class="wrt"><span class="wvol">796.5K</span><div class="cw"><div class="cb"><div class="cf" style="width:75%;background:var(--teal)"></div></div><span class="cpct">75%</span></div></div></div>
+      </div>
+      <div class="wi">
+        <div class="wr1"><div class="wsym-w"><span class="wsym">AMZN</span><span class="sb sb-hold">Hold</span></div><span class="wchg up">+1.47%</span></div>
+        <div class="wr2"><span class="wprice">$212.48</span><div class="wrt"><span class="wvol">1.7M</span><div class="cw"><div class="cb"><div class="cf" style="width:30%;background:var(--t2)"></div></div><span class="cpct">30%</span></div></div></div>
+      </div>
+      <div class="wi">
+        <div class="wr1"><div class="wsym-w"><span class="wsym">AMD</span><span class="sb sb-sell">Sell</span></div><span class="wchg dn">−2.18%</span></div>
+        <div class="wr2"><span class="wprice">$108.34</span><div class="wrt"><span class="wvol">3.1M</span><div class="cw"><div class="cb"><div class="cf" style="width:68%;background:var(--crimson)"></div></div><span class="cpct">68%</span></div></div></div>
+      </div>
+    </div>
+    <div class="wfoot">
+      <button class="runbtn">⚡ Run AI Analysis · AAPL</button>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="col">
+    <div class="cpanel">
+      <div class="chard">
+        <div class="chl">
+          <span class="chsym">AAPL</span>
+          <span class="chprice">$256.72</span>
+          <span class="chchg up">+$4.84 &nbsp;+1.92%</span>
+        </div>
+        <div class="chr">
+          <div class="bg">
+            <button class="cbtn on">BB</button>
+            <button class="cbtn on">EMA</button>
+            <button class="cbtn">VOL</button>
+          </div>
+          <div class="csep"></div>
+          <div class="bg">
+            <button class="cbtn">1 Min</button>
+            <button class="cbtn on">5 Min</button>
+          </div>
+          <button class="cref">↺</button>
+        </div>
+      </div>
+      <div class="cbody">
+        <svg viewBox="0 0 880 270" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2DD4BF" stop-opacity=".18"/>
+              <stop offset="100%" stop-color="#2DD4BF" stop-opacity=".01"/>
+            </linearGradient>
+          </defs>
+          <!-- grid -->
+          <line x1="54" y1="22" x2="872" y2="22" stroke="rgba(112,162,210,.05)" stroke-width="1"/>
+          <line x1="54" y1="62" x2="872" y2="62" stroke="rgba(112,162,210,.05)" stroke-width="1"/>
+          <line x1="54" y1="102" x2="872" y2="102" stroke="rgba(112,162,210,.05)" stroke-width="1"/>
+          <line x1="54" y1="142" x2="872" y2="142" stroke="rgba(112,162,210,.05)" stroke-width="1"/>
+          <line x1="54" y1="182" x2="872" y2="182" stroke="rgba(112,162,210,.05)" stroke-width="1"/>
+          <line x1="54" y1="222" x2="872" y2="222" stroke="rgba(112,162,210,.05)" stroke-width="1"/>
+          <!-- y labels -->
+          <text x="48" y="25"  font-family="IBM Plex Mono" font-size="8.5" fill="rgba(76,99,122,.8)" text-anchor="end">258.00</text>
+          <text x="48" y="65"  font-family="IBM Plex Mono" font-size="8.5" fill="rgba(76,99,122,.8)" text-anchor="end">257.00</text>
+          <text x="48" y="105" font-family="IBM Plex Mono" font-size="8.5" fill="rgba(76,99,122,.8)" text-anchor="end">256.00</text>
+          <text x="48" y="145" font-family="IBM Plex Mono" font-size="8.5" fill="rgba(76,99,122,.8)" text-anchor="end">255.00</text>
+          <text x="48" y="185" font-family="IBM Plex Mono" font-size="8.5" fill="rgba(76,99,122,.8)" text-anchor="end">254.00</text>
+          <text x="48" y="225" font-family="IBM Plex Mono" font-size="8.5" fill="rgba(76,99,122,.8)" text-anchor="end">253.00</text>
+          <!-- BB fill -->
+          <path d="M54,90 C150,78 250,64 370,52 470,42 570,34 680,27 780,21 840,18 872,17 L872,160 C840,162 780,167 680,173 570,179 470,186 370,193 250,202 150,214 54,228 Z" fill="rgba(232,154,60,.04)"/>
+          <!-- BB upper dashed -->
+          <path d="M54,90 C150,78 250,64 370,52 470,42 570,34 680,27 780,21 840,18 872,17" stroke="rgba(232,154,60,.4)" stroke-width="1.2" fill="none" stroke-dasharray="5,4"/>
+          <!-- BB lower dashed -->
+          <path d="M54,228 C150,214 250,202 370,193 470,186 570,179 680,173 780,167 840,162 872,160" stroke="rgba(232,154,60,.4)" stroke-width="1.2" fill="none" stroke-dasharray="5,4"/>
+          <!-- EMA21 teal -->
+          <path d="M54,218 C150,202 250,186 370,170 470,157 570,146 680,135 780,125 840,119 872,116" stroke="rgba(45,212,191,.55)" stroke-width="1.5" fill="none"/>
+          <!-- EMA9 muted -->
+          <path d="M54,224 C150,207 250,190 370,173 470,159 570,148 680,137 780,127 840,121 872,118" stroke="rgba(139,160,180,.32)" stroke-width="1" fill="none"/>
+          <!-- area fill -->
+          <path d="M54,240 C100,232 150,220 200,208 260,194 320,180 380,168 430,158 480,150 530,143 580,136 630,130 680,124 730,118 780,112 830,107 860,103 872,101 L872,270 L54,270 Z" fill="url(#ag)"/>
+          <!-- price line -->
+          <path d="M54,240 C100,232 150,220 200,208 260,194 320,180 380,168 430,158 480,150 530,143 580,136 630,130 680,124 730,118 780,112 830,107 860,103 872,101" stroke="#2DD4BF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- current price ref -->
+          <line x1="54" y1="101" x2="848" y2="101" stroke="rgba(45,212,191,.18)" stroke-width="1" stroke-dasharray="3,5"/>
+          <!-- price bubble -->
+          <rect x="848" y="91" width="50" height="17" rx="3" fill="rgba(45,212,191,.15)" stroke="rgba(45,212,191,.3)" stroke-width="1"/>
+          <text x="873" y="103" font-family="IBM Plex Mono" font-size="8.5" fill="#2DD4BF" text-anchor="middle" font-weight="600">256.72</text>
+          <!-- x labels -->
+          <text x="54"  y="263" font-family="IBM Plex Mono" font-size="8" fill="rgba(76,99,122,.6)" text-anchor="middle">08:55</text>
+          <text x="188" y="263" font-family="IBM Plex Mono" font-size="8" fill="rgba(76,99,122,.6)" text-anchor="middle">09:30</text>
+          <text x="322" y="263" font-family="IBM Plex Mono" font-size="8" fill="rgba(76,99,122,.6)" text-anchor="middle">10:00</text>
+          <text x="456" y="263" font-family="IBM Plex Mono" font-size="8" fill="rgba(76,99,122,.6)" text-anchor="middle">10:20</text>
+          <text x="590" y="263" font-family="IBM Plex Mono" font-size="8" fill="rgba(76,99,122,.6)" text-anchor="middle">10:45</text>
+          <text x="724" y="263" font-family="IBM Plex Mono" font-size="8" fill="rgba(76,99,122,.6)" text-anchor="middle">11:00</text>
+          <text x="858" y="263" font-family="IBM Plex Mono" font-size="8" fill="rgba(76,99,122,.6)" text-anchor="middle">11:10</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- POSITIONS -->
+    <div class="posp">
+      <div class="poshead">
+        <div class="phl"><span class="ptitle">Open Positions</span><span class="pcnt">1 open</span></div>
+        <button style="background:none;border:none;color:var(--t2);font-size:13px;cursor:pointer">↺</button>
+      </div>
+      <div class="posbody">
+        <table>
+          <thead>
+            <tr>
+              <th>Symbol</th><th>Qty</th><th>Entry</th><th>Price</th>
+              <th style="text-align:right">P&amp;L</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="symc"><span class="spill long">Long</span><span class="tdsym">TSLA</span></div></td>
+              <td class="tdm">40</td>
+              <td class="tdm">$378.83</td>
+              <td class="tdm">$380.11</td>
+              <td class="tdpnl up" style="text-align:right">
+                <div>+$51.20</div>
+                <div class="tdpsub up">+0.34%</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SCANNER STRIP -->
+    <div class="scan">
+      <div class="scanl">
+        <div class="sdot"></div>
+        <span class="slbl">Market Scanner</span>
+        <span class="scnt">239 symbols</span>
+      </div>
+      <span class="scanr">▾ Expand</span>
+    </div>
+  </div>
+
+  <!-- AI SIGNAL FEED -->
+  <div class="aif">
+    <div class="aih">
+      <div class="ailg">
+        <span class="ptitle">AI Signal Feed</span>
+        <div class="alive"><div class="aild"></div><span class="ailt">Live</span></div>
+      </div>
+      <span class="aicnt">50 signals</span>
+    </div>
+    <div class="aibody">
+
+      <!-- TSLA BUY executed -->
+      <div class="ac buy" style="animation-delay:0s">
+        <div class="ach">
+          <div class="acl"><span class="acsym">TSLA</span><span class="sb sb-buy">Buy</span><span class="acqty">40 sh</span></div>
+          <span class="actime">11:05 ET</span>
+        </div>
+        <div class="acconf">
+          <div class="acrow"><span class="aclbl">Confidence</span><span class="acval up">78%</span></div>
+          <div class="actrack"><div class="acfill" style="width:78%;background:var(--teal)"></div></div>
+        </div>
+        <p class="areason">Strong momentum with EMA9 crossing above EMA21 on volume surge (3.4× average). RSI at 58.2 with room to run. MACD histogram positive and expanding. Price reclaimed key resistance at $378 with conviction — initiating position with defined risk.</p>
+        <div class="acfoot"><span class="asl">SL $372.50</span><span class="atp">TP $392.00</span></div>
+        <div class="aexec">✓ Executed · $378.83</div>
+      </div>
+
+      <!-- AAPL HOLD -->
+      <div class="ac hold" style="animation-delay:.06s">
+        <div class="ach">
+          <div class="acl"><span class="acsym">AAPL</span><span class="sb sb-hold">Hold</span></div>
+          <span class="actime">11:08 ET</span>
+        </div>
+        <div class="acconf">
+          <div class="acrow"><span class="aclbl">Confidence</span><span class="acval" style="color:var(--t2)">30%</span></div>
+          <div class="actrack"><div class="acfill" style="width:30%;background:var(--t2)"></div></div>
+        </div>
+        <p class="areason">Price consolidating near BB middle with tight bandwidth (0.0021) — low volatility regime. RSI neutral at 48.3, MACD showing bearish divergence on negative histogram. Volume ratio 0.2× suggests lack of institutional conviction. Waiting for directional signal.</p>
+        <div class="askip">⊘ Skipped — confidence below 75% threshold</div>
+      </div>
+
+      <!-- AMD SELL -->
+      <div class="ac sell" style="animation-delay:.12s">
+        <div class="ach">
+          <div class="acl"><span class="acsym">AMD</span><span class="sb sb-sell">Sell</span></div>
+          <span class="actime">11:00 ET</span>
+        </div>
+        <div class="acconf">
+          <div class="acrow"><span class="aclbl">Confidence</span><span class="acval dn">68%</span></div>
+          <div class="actrack"><div class="acfill" style="width:68%;background:var(--crimson)"></div></div>
+        </div>
+        <p class="areason">EMA9 crossing below EMA21 with bearish MACD divergence. Death cross forming on 5-min. Volume 2.1× on breakdown through $110 support. Expecting continuation toward $104–$105 zone with declining relative strength.</p>
+        <div class="acfoot"><span class="asl">SL $111.50</span><span class="atp">TP $104.80</span></div>
+        <div class="askip">⊘ Skipped — confidence below 75% threshold</div>
+      </div>
+
+      <!-- MSFT BUY -->
+      <div class="ac buy" style="animation-delay:.18s">
+        <div class="ach">
+          <div class="acl"><span class="acsym">MSFT</span><span class="sb sb-buy">Buy</span></div>
+          <span class="actime">10:55 ET</span>
+        </div>
+        <div class="acconf">
+          <div class="acrow"><span class="aclbl">Confidence</span><span class="acval up">75%</span></div>
+          <div class="actrack"><div class="acfill" style="width:75%;background:var(--teal)"></div></div>
+        </div>
+        <p class="areason">Clean breakout above 200-day EMA on 2.8× average volume. RSI at 61.4 with positive divergence. Bullish engulfing on the 5-min chart. Risk defined below yesterday's close at $366.20 — favorable R:R setup.</p>
+        <div class="acfoot"><span class="asl">SL $366.20</span><span class="atp">TP $378.50</span></div>
+      </div>
+
+      <!-- NVDA HOLD -->
+      <div class="ac hold" style="animation-delay:.24s">
+        <div class="ach">
+          <div class="acl"><span class="acsym">NVDA</span><span class="sb sb-hold">Hold</span></div>
+          <span class="actime">10:45 ET</span>
+        </div>
+        <div class="acconf">
+          <div class="acrow"><span class="aclbl">Confidence</span><span class="acval" style="color:var(--t2)">30%</span></div>
+          <div class="actrack"><div class="acfill" style="width:30%;background:var(--t2)"></div></div>
+        </div>
+        <p class="areason">RSI overbought at 73.4 after recent run. Testing BB upper at $257.95 — volume declining on test, low conviction. Waiting for normalization below 65 or a pullback to EMA21 at $255.35 before re-evaluating.</p>
+        <div class="askip">⊘ Skipped — overbought, awaiting pullback</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// Live clock
+(function tick(){
+  const el=document.getElementById('clock');
+  if(el){const t=new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});el.textContent='ET '+t}
+  setTimeout(tick,1000);
+})();
+
+// Toggle auto-trade
+function tog(){
+  const track=document.getElementById('ttrack');
+  const thumb=document.getElementById('tthumb');
+  const state=document.getElementById('tstate');
+  const sub=document.getElementById('asub');
+  const on=thumb.style.transform==='translateX(20px)'||!thumb.style.transform;
+  if(on){
+    track.style.background='var(--bg3)';track.style.borderColor='var(--b1)';
+    thumb.style.background='var(--t2)';thumb.style.transform='translateX(2px)';
+    state.textContent='OFF';state.style.color='var(--t2)';
+    sub.textContent='Disabled — orders will not execute';
+  } else {
+    track.style.background='var(--ta12)';track.style.borderColor='rgba(45,212,191,.35)';
+    thumb.style.background='var(--teal)';thumb.style.transform='translateX(20px)';
+    state.textContent='ON';state.style.color='var(--teal)';
+    sub.textContent='Active — orders execute automatically';
+  }
+}
+</script>
+</body>
+</html>
