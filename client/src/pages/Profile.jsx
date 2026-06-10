@@ -4,9 +4,9 @@ import { apiFetch } from '../hooks/useApi';
 
 function Section({ title, children }) {
   return (
-    <div className="bg-bg-card border border-bg-border rounded-sm">
-      <div className="px-4 py-3 border-b border-bg-border">
-        <span className="font-mono text-xs text-amber-400 tracking-widest">{title}</span>
+    <div className="bg-surface border border-border rounded">
+      <div className="px-4 py-3 border-b border-border">
+        <span className="font-sans text-[10px] text-text-muted uppercase tracking-widest">{title}</span>
       </div>
       <div className="p-4">{children}</div>
     </div>
@@ -16,7 +16,7 @@ function Section({ title, children }) {
 function Field({ label, children }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="font-mono text-xs text-gray-500 tracking-wider">{label}</label>
+      <label className="font-sans text-xs text-text-muted uppercase tracking-wider">{label}</label>
       {children}
     </div>
   );
@@ -31,7 +31,7 @@ function Input({ value, onChange, type = 'text', placeholder, readOnly, disabled
       placeholder={placeholder}
       readOnly={readOnly}
       disabled={disabled}
-      className="bg-bg-base border border-bg-border rounded-sm px-3 py-2 font-mono text-sm text-gray-200 focus:outline-none focus:border-amber-500 transition-colors disabled:opacity-50 read-only:opacity-60 read-only:cursor-default"
+      className="bg-void border border-border rounded px-3 py-2 font-mono text-sm text-text-primary placeholder-text-muted focus:shadow-[0_0_0_2px_#00D4AA] outline-none transition-shadow disabled:opacity-50 read-only:opacity-60 read-only:cursor-default"
     />
   );
 }
@@ -50,6 +50,7 @@ export default function Profile({ onClose }) {
   const [anthropicKey, setAnthropicKey] = useState('');
   const [keysSaving, setKeysSaving] = useState(false);
   const [keysMsg, setKeysMsg] = useState(null);
+  const [keysDirty, setKeysDirty] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -79,6 +80,10 @@ export default function Profile({ onClose }) {
     loadKeys();
   }, []);
 
+  function markDirty() {
+    setKeysDirty(true);
+  }
+
   async function handleSaveKeys(e) {
     e.preventDefault();
     setKeysSaving(true);
@@ -99,6 +104,7 @@ export default function Profile({ onClose }) {
       setAlpacaKey('');
       setAlpacaSecret('');
       setAnthropicKey('');
+      setKeysDirty(false);
       // Refresh key display
       const data = await apiFetch('/auth/keys');
       setKeys(data);
@@ -129,25 +135,25 @@ export default function Profile({ onClose }) {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base overflow-y-auto">
+    <div className="min-h-screen bg-void overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-bg-base border-b border-bg-border flex items-center justify-between px-4 h-10">
-        <span className="font-mono text-xs text-amber-400 tracking-widest">PROFILE</span>
+      <div className="sticky top-0 z-10 bg-void border-b border-border flex items-center justify-between px-4 h-10">
+        <span className="font-sans text-xs text-text-muted uppercase tracking-widest">PROFILE</span>
         {onClose && (
           <button
             onClick={onClose}
-            className="font-mono text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1"
+            className="font-sans text-xs text-text-muted hover:text-text-primary transition-colors px-2 py-1"
           >
             BACK
           </button>
         )}
       </div>
 
-      <div className="max-w-2xl mx-auto p-4 flex flex-col gap-4">
+      <div className="max-w-2xl mx-auto px-6 py-6 flex flex-col gap-4">
         {/* No API keys warning */}
         {keys && !keys.configured && (
-          <div className="px-4 py-3 bg-amber-900/20 border border-amber-700 rounded-sm">
-            <span className="font-mono text-xs text-amber-400">
+          <div className="px-4 py-3 bg-warn/10 border border-warn/30 rounded">
+            <span className="font-sans text-xs text-warn">
               Configure your API keys below to start trading. Without them, market data and trading features will not be available.
             </span>
           </div>
@@ -174,27 +180,27 @@ export default function Profile({ onClose }) {
         {/* Section 2: API Keys */}
         <Section title="API KEYS">
           {keysLoading ? (
-            <div className="font-mono text-xs text-gray-500 py-2">Loading...</div>
+            <div className="font-mono text-xs text-text-muted py-2">—</div>
           ) : (
             <form onSubmit={handleSaveKeys} className="flex flex-col gap-4">
               {keysMsg && (
-                <div className={`px-3 py-2 rounded-sm border text-xs font-mono ${
+                <div className={`px-3 py-2 rounded border font-mono text-xs ${
                   keysMsg.type === 'success'
-                    ? 'bg-green-900/20 border-green-700 text-green-400'
-                    : 'bg-red-900/20 border-red-700 text-red-400'
+                    ? 'bg-signal/10 border-signal/30 text-signal'
+                    : 'bg-loss/10 border-loss/30 text-loss'
                 }`}>
                   {keysMsg.text}
                 </div>
               )}
 
-              <div className="text-xs font-mono text-gray-500 pb-1 border-b border-bg-border">
+              <div className="font-sans text-[10px] text-text-muted pb-1 border-b border-border uppercase tracking-widest">
                 ALPACA MARKETS
               </div>
 
               <Field label="API KEY">
                 <Input
                   value={alpacaKey}
-                  onChange={e => setAlpacaKey(e.target.value)}
+                  onChange={e => { setAlpacaKey(e.target.value); markDirty(); }}
                   placeholder={keys?.alpacaApiKey || 'Enter new Alpaca API key'}
                 />
               </Field>
@@ -203,7 +209,7 @@ export default function Profile({ onClose }) {
                 <Input
                   type="password"
                   value={alpacaSecret}
-                  onChange={e => setAlpacaSecret(e.target.value)}
+                  onChange={e => { setAlpacaSecret(e.target.value); markDirty(); }}
                   placeholder={keys?.alpacaSecretKey ? 'Saved (enter to update)' : 'Enter Alpaca secret key'}
                 />
               </Field>
@@ -211,7 +217,7 @@ export default function Profile({ onClose }) {
               <Field label="BASE URL">
                 <Input
                   value={alpacaBaseUrl}
-                  onChange={e => setAlpacaBaseUrl(e.target.value)}
+                  onChange={e => { setAlpacaBaseUrl(e.target.value); markDirty(); }}
                   placeholder="https://paper-api.alpaca.markets"
                 />
               </Field>
@@ -219,7 +225,7 @@ export default function Profile({ onClose }) {
               <Field label="DATA URL">
                 <Input
                   value={alpacaDataUrl}
-                  onChange={e => setAlpacaDataUrl(e.target.value)}
+                  onChange={e => { setAlpacaDataUrl(e.target.value); markDirty(); }}
                   placeholder="https://data.alpaca.markets"
                 />
               </Field>
@@ -227,12 +233,12 @@ export default function Profile({ onClose }) {
               <Field label="WEBSOCKET URL">
                 <Input
                   value={alpacaWsUrl}
-                  onChange={e => setAlpacaWsUrl(e.target.value)}
+                  onChange={e => { setAlpacaWsUrl(e.target.value); markDirty(); }}
                   placeholder="wss://stream.data.alpaca.markets/v2/iex"
                 />
               </Field>
 
-              <div className="text-xs font-mono text-gray-500 pt-2 pb-1 border-b border-bg-border">
+              <div className="font-sans text-[10px] text-text-muted pt-2 pb-1 border-b border-border uppercase tracking-widest">
                 ANTHROPIC AI
               </div>
 
@@ -240,7 +246,7 @@ export default function Profile({ onClose }) {
                 <Input
                   type="password"
                   value={anthropicKey}
-                  onChange={e => setAnthropicKey(e.target.value)}
+                  onChange={e => { setAnthropicKey(e.target.value); markDirty(); }}
                   placeholder={keys?.anthropicApiKey || 'Enter Anthropic API key'}
                 />
               </Field>
@@ -249,7 +255,11 @@ export default function Profile({ onClose }) {
                 <button
                   type="submit"
                   disabled={keysSaving}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-mono text-xs font-bold tracking-widest rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`font-mono text-xs font-bold px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    keysDirty
+                      ? 'bg-signal text-void hover:bg-[#00BFA0] border border-signal'
+                      : 'bg-surface border border-border text-text-muted'
+                  }`}
                 >
                   {keysSaving ? 'SAVING...' : 'SAVE API KEYS'}
                 </button>
@@ -259,9 +269,10 @@ export default function Profile({ onClose }) {
         </Section>
 
         {/* Section 3: Danger Zone */}
-        <Section title="DANGER ZONE">
+        <div className="border border-loss/20 rounded p-4 mt-4">
+          <h3 className="font-sans text-xs text-loss uppercase tracking-widest mb-4">DANGER ZONE</h3>
           <div className="flex flex-col gap-4">
-            <div className="text-xs font-mono text-gray-400">
+            <div className="font-sans text-xs text-text-muted">
               Deleting your account is permanent. All your trades, decisions, watchlist, and configuration will be erased.
             </div>
 
@@ -277,13 +288,13 @@ export default function Profile({ onClose }) {
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirm !== user?.username || deleteLoading}
-                className="px-4 py-2 bg-red-900 hover:bg-red-700 text-red-200 font-mono text-xs font-bold tracking-widest rounded-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-red-700"
+                className="font-mono text-xs px-4 py-2 rounded border border-loss text-loss hover:bg-loss hover:text-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {deleteLoading ? 'DELETING...' : 'DELETE ACCOUNT'}
               </button>
             </div>
           </div>
-        </Section>
+        </div>
       </div>
     </div>
   );

@@ -2,31 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-bg-base text-gray-300 font-sans;
-  }
+:root {
+  --void: #080B10;
+  --surface: #0F1420;
+  --border: #1C2333;
+  --signal: #00D4AA;
+  --warn: #F59E0B;
+  --loss: #EF4444;
+  --text-primary: #E8EDF5;
+  --text-muted: #5A6580;
 }
 
-@layer utilities {
-  .font-mono { font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; }
-  .num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
-  .panel { @apply bg-bg-panel border border-bg-border rounded-lg; }
-  .card { @apply bg-bg-card border border-bg-border rounded-md; }
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--void);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbar for panels */
-.scroll-panel {
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #1e2a3a transparent;
+.font-mono, .mono { font-family: 'JetBrains Mono', monospace !important; }
+
+/* Live pulse animation */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
+.pulse-live { animation: pulse-live 2s ease-in-out infinite; }
 
-/* Blinking cursor for live indicator */
-@keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
-.blink { animation: blink 1.2s ease-in-out infinite; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-/* Glow effects */
-.glow-green { box-shadow: 0 0 8px #22c55e33; }
-.glow-red   { box-shadow: 0 0 8px #ef444433; }
-.glow-amber { box-shadow: 0 0 8px #f59e0b33; }
+/* Focus ring — signal colored */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--signal);
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../hooks/useApi';
-import { fmtPrice, fmtDateTime, fmtNum, colorForValue } from '../utils/format';
+import { fmtPrice, fmtDateTime, fmtNum } from '../utils/format';
 
 const SYMBOLS = ['ALL', 'AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN'];
 
@@ -33,30 +33,30 @@ export default function TradeHistory() {
   const winRate = displayed.length ? (wins / displayed.length) * 100 : 0;
 
   return (
-    <div className="flex flex-col h-full min-h-0 p-3 gap-3">
+    <div className="bg-void flex flex-col h-full min-h-0 p-3 gap-3">
       {/* Stats bar */}
       <div className="flex gap-3">
         <StatCard label="Total Trades" value={displayed.length} />
-        <StatCard label="Win Rate" value={winRate.toFixed(1) + '%'} color={winRate >= 50 ? 'text-green-400' : 'text-red-400'} />
-        <StatCard label="Total P&L" value={(totalPnl >= 0 ? '+' : '') + '$' + fmtNum(totalPnl)} color={colorForValue(totalPnl)} />
-        <StatCard label="Wins" value={wins} color="text-green-400" />
-        <StatCard label="Losses" value={displayed.length - wins} color="text-red-400" />
+        <StatCard label="Win Rate" value={winRate.toFixed(1) + '%'} color={winRate >= 50 ? 'text-signal' : 'text-loss'} />
+        <StatCard label="Total P&L" value={(totalPnl >= 0 ? '+' : '') + '$' + fmtNum(totalPnl)} color={totalPnl >= 0 ? 'text-signal' : 'text-loss'} />
+        <StatCard label="Wins" value={wins} color="text-signal" />
+        <StatCard label="Losses" value={displayed.length - wins} color="text-loss" />
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 panel px-3 py-2 flex-shrink-0">
+      <div className="flex items-center gap-3 bg-surface border border-border rounded px-3 py-2 flex-shrink-0">
         <div className="flex items-center gap-1">
-          <span className="text-xs font-mono text-gray-600 mr-1">SYMBOL</span>
+          <span className="font-sans text-xs text-text-muted mr-1">SYMBOL</span>
           {SYMBOLS.map(s => (
             <FilterBtn key={s} active={filter === s} onClick={() => setFilter(s)}>{s}</FilterBtn>
           ))}
         </div>
-        <span className="text-bg-border">│</span>
+        <span className="text-border">│</span>
         <div className="flex items-center gap-1">
-          <span className="text-xs font-mono text-gray-600 mr-1">RESULT</span>
+          <span className="font-sans text-xs text-text-muted mr-1">RESULT</span>
           {['ALL', 'WIN', 'LOSS'].map(w => (
             <FilterBtn key={w} active={winFilter === w} onClick={() => setWinFilter(w)}
-              color={w === 'WIN' ? 'green' : w === 'LOSS' ? 'red' : 'default'}
+              color={w === 'WIN' ? 'signal' : w === 'LOSS' ? 'loss' : 'default'}
             >
               {w}
             </FilterBtn>
@@ -65,7 +65,7 @@ export default function TradeHistory() {
         <div className="ml-auto">
           <button
             onClick={loadTrades}
-            className="text-xs font-mono text-gray-500 hover:text-gray-300"
+            className="font-mono text-xs text-text-muted hover:text-text-primary transition-colors"
           >
             ↺ Refresh
           </button>
@@ -73,31 +73,31 @@ export default function TradeHistory() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 panel overflow-hidden flex flex-col min-h-0">
-        <table className="w-full text-xs font-mono">
-          <thead className="border-b border-bg-border flex-shrink-0">
-            <tr className="text-gray-600">
-              <th className="text-left px-3 py-2">TIME</th>
-              <th className="text-left px-2 py-2">SYM</th>
-              <th className="text-left px-2 py-2">SIDE</th>
-              <th className="text-right px-2 py-2">QTY</th>
-              <th className="text-right px-2 py-2">ENTRY</th>
-              <th className="text-right px-2 py-2">EXIT</th>
-              <th className="text-right px-2 py-2">P&L</th>
-              <th className="text-right px-2 py-2">CONF</th>
-              <th className="text-left px-3 py-2">STATUS</th>
+      <div className="flex-1 bg-surface border border-border rounded overflow-hidden flex flex-col min-h-0">
+        <table className="w-full text-xs">
+          <thead className="bg-surface border-b border-border flex-shrink-0">
+            <tr>
+              <th className="text-left px-3 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">TIME</th>
+              <th className="text-left px-2 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">SYM</th>
+              <th className="text-left px-2 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">SIDE</th>
+              <th className="text-right px-2 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">QTY</th>
+              <th className="text-right px-2 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">ENTRY</th>
+              <th className="text-right px-2 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">EXIT</th>
+              <th className="text-right px-2 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">P&L</th>
+              <th className="text-right px-2 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">CONF</th>
+              <th className="text-left px-3 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">STATUS</th>
             </tr>
           </thead>
         </table>
-        <div className="flex-1 scroll-panel overflow-y-auto">
-          <table className="w-full text-xs font-mono">
+        <div className="flex-1 overflow-y-auto">
+          <table className="w-full text-xs">
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="text-center py-8 text-gray-600">Loading...</td></tr>
+                <tr><td colSpan={9} className="text-center py-8 font-mono text-text-muted">—</td></tr>
               ) : displayed.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-8 text-gray-600">No trades found</td></tr>
-              ) : displayed.map(trade => (
-                <TradeRow key={trade.id} trade={trade} />
+                <tr><td colSpan={9} className="text-center py-8 font-sans text-text-muted text-xs">No trades found</td></tr>
+              ) : displayed.map((trade, idx) => (
+                <TradeRow key={trade.id} trade={trade} idx={idx} />
               ))}
             </tbody>
           </table>
@@ -107,7 +107,7 @@ export default function TradeHistory() {
   );
 }
 
-function TradeRow({ trade }) {
+function TradeRow({ trade, idx }) {
   const [expanded, setExpanded] = useState(false);
   const pnl = trade.pnl;
   const hasExit = trade.exit_price != null;
@@ -115,42 +115,46 @@ function TradeRow({ trade }) {
   return (
     <>
       <tr
-        className="border-b border-bg-border/40 hover:bg-bg-hover cursor-pointer transition-colors"
+        className={`border-b border-border cursor-pointer transition-colors hover:bg-void/50 ${idx % 2 === 0 ? 'bg-void' : 'bg-surface'}`}
         onClick={() => setExpanded(e => !e)}
       >
-        <td className="px-3 py-2 text-gray-500">{fmtDateTime(trade.created_at)}</td>
-        <td className="px-2 py-2 font-bold text-gray-200">{trade.symbol}</td>
+        <td className="px-3 py-2 font-mono text-xs text-text-muted">{fmtDateTime(trade.created_at)}</td>
+        <td className="px-2 py-2 font-mono font-bold text-sm text-text-primary">{trade.symbol}</td>
         <td className="px-2 py-2">
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+          <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border ${
             trade.side === 'buy'
-              ? 'bg-green-400/10 text-green-400'
-              : 'bg-red-400/10 text-red-400'
+              ? 'bg-signal/10 text-signal border-signal/20'
+              : 'bg-loss/10 text-loss border-loss/20'
           }`}>
             {trade.side.toUpperCase()}
           </span>
         </td>
-        <td className="text-right px-2 py-2 text-gray-300">{fmtNum(trade.qty, 0)}</td>
-        <td className="text-right px-2 py-2 text-gray-400">{fmtPrice(trade.entry_price)}</td>
-        <td className="text-right px-2 py-2 text-gray-400">{fmtPrice(trade.exit_price)}</td>
-        <td className={`text-right px-2 py-2 font-medium ${colorForValue(pnl)}`}>
+        <td className="text-right px-2 py-2 font-mono text-sm text-text-primary">{fmtNum(trade.qty, 0)}</td>
+        <td className="text-right px-2 py-2 font-mono text-sm text-text-primary">{fmtPrice(trade.entry_price)}</td>
+        <td className="text-right px-2 py-2 font-mono text-sm text-text-primary">{fmtPrice(trade.exit_price)}</td>
+        <td className={`text-right px-2 py-2 font-mono text-sm font-medium ${pnl == null ? 'text-text-primary' : pnl >= 0 ? 'text-signal' : 'text-loss'}`}>
           {hasExit ? (pnl >= 0 ? '+' : '') + '$' + fmtNum(pnl) : '—'}
         </td>
-        <td className="text-right px-2 py-2 text-gray-500">
+        <td className="text-right px-2 py-2 font-mono text-xs text-text-muted">
           {trade.ai_confidence != null ? (trade.ai_confidence * 100).toFixed(0) + '%' : '—'}
         </td>
         <td className="px-3 py-2">
-          <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-            trade.status === 'closed'
-              ? 'bg-gray-700/50 text-gray-400'
-              : 'bg-cyan-400/10 text-cyan-400'
-          }`}>
-            {trade.status.toUpperCase()}
-          </span>
+          {hasExit ? (
+            pnl > 0 ? (
+              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-signal/10 text-signal border border-signal/20">WIN</span>
+            ) : (
+              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-loss/10 text-loss border border-loss/20">LOSS</span>
+            )
+          ) : (
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface text-text-muted border border-border">
+              {trade.status.toUpperCase()}
+            </span>
+          )}
         </td>
       </tr>
       {expanded && trade.ai_reasoning && (
-        <tr className="bg-bg-hover">
-          <td colSpan={9} className="px-6 py-2 text-gray-400 text-[11px] font-sans italic border-b border-bg-border">
+        <tr className="bg-void/50">
+          <td colSpan={9} className="px-6 py-2 font-sans text-xs text-text-muted italic border-b border-border">
             AI: {trade.ai_reasoning}
           </td>
         </tr>
@@ -159,28 +163,28 @@ function TradeRow({ trade }) {
   );
 }
 
-function StatCard({ label, value, color = 'text-gray-200' }) {
+function StatCard({ label, value, color = 'text-text-primary' }) {
   return (
-    <div className="panel px-4 py-2 flex-1 text-center">
-      <div className="text-[10px] font-mono text-gray-600 mb-1">{label}</div>
-      <div className={`font-mono font-bold text-base num ${color}`}>{value}</div>
+    <div className="bg-surface border border-border rounded px-4 py-2 flex-1 text-center">
+      <div className="font-sans text-[10px] text-text-muted uppercase tracking-wider mb-1">{label}</div>
+      <div className={`font-mono font-bold text-base ${color}`}>{value}</div>
     </div>
   );
 }
 
 function FilterBtn({ children, active, onClick, color = 'default' }) {
   const activeColors = {
-    default: 'bg-cyan-400/15 text-cyan-400 border-cyan-400/40',
-    green: 'bg-green-400/15 text-green-400 border-green-400/40',
-    red: 'bg-red-400/15 text-red-400 border-red-400/40',
+    default: 'bg-signal/15 text-signal border-signal/40',
+    signal:  'bg-signal/15 text-signal border-signal/40',
+    loss:    'bg-loss/15 text-loss border-loss/40',
   };
   return (
     <button
       onClick={onClick}
-      className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-colors ${
+      className={`font-mono text-[10px] px-2 py-0.5 rounded border transition-colors ${
         active
           ? activeColors[color]
-          : 'text-gray-500 border-transparent hover:text-gray-300'
+          : 'text-text-muted border-transparent hover:text-text-primary'
       }`}
     >
       {children}

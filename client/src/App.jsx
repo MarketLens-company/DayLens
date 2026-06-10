@@ -18,20 +18,28 @@ const NAV = [
 
 function NavBar({ active, onChange, rightSlot }) {
   return (
-    <nav className="flex items-center gap-1 px-4 h-9 bg-bg-base border-b border-bg-border flex-shrink-0">
+    <nav className="flex items-center gap-1 px-4 h-12 bg-void border-b border-border flex-shrink-0">
+      {/* Logo */}
+      <span className="font-mono font-bold text-base tracking-wide mr-6 whitespace-nowrap flex items-center gap-1.5">
+        <span className="text-signal text-sm">◆</span>
+        <span className="text-text-primary">DayLens</span>
+      </span>
+
+      {/* Nav tabs */}
       {NAV.map(item => (
         <button
           key={item.id}
           onClick={() => onChange(item.id)}
-          className={`px-3 py-1 text-xs font-mono rounded transition-colors ${
+          className={`px-3 h-12 font-sans text-xs uppercase tracking-widest transition-colors border-b-2 ${
             active === item.id
-              ? 'bg-bg-card text-cyan-400 border border-bg-border'
-              : 'text-gray-600 hover:text-gray-400'
+              ? 'text-signal border-signal'
+              : 'text-text-muted hover:text-text-primary border-transparent'
           }`}
         >
           {item.label}
         </button>
       ))}
+
       {/* Right-aligned user menu slot */}
       {rightSlot && <div className="ml-auto">{rightSlot}</div>}
     </nav>
@@ -42,30 +50,38 @@ function UserMenu({ onProfile, onLogout, username }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center gap-3">
+      {/* Live indicator */}
+      <div className="flex items-center gap-1.5">
+        <span className="pulse-live text-signal text-xs">●</span>
+        <span className="text-text-muted font-sans text-xs tracking-widest">LIVE</span>
+      </div>
+
+      {/* Username chip */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 px-2 py-1 text-xs font-mono text-gray-400 hover:text-gray-200 border border-bg-border rounded-sm transition-colors"
+        className="bg-surface border border-border rounded px-2 py-1 font-sans text-xs text-text-primary hover:border-text-muted transition-colors"
       >
-        <span className="text-amber-400 text-[8px]">&#9679;</span>
-        <span className="max-w-28 truncate">{username}</span>
+        {username}
       </button>
+
+      {/* Logout */}
+      <button
+        onClick={onLogout}
+        className="text-text-muted hover:text-loss font-sans text-xs transition-colors"
+      >
+        LOGOUT
+      </button>
+
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 w-36 bg-bg-card border border-bg-border rounded-sm z-20 overflow-hidden">
+          <div className="absolute right-0 top-full mt-1 w-36 bg-surface border border-border rounded z-20 overflow-hidden">
             <button
               onClick={() => { setOpen(false); onProfile(); }}
-              className="w-full px-3 py-2 text-left font-mono text-xs text-gray-300 hover:bg-bg-base hover:text-amber-400 transition-colors"
+              className="w-full px-3 py-2 text-left font-sans text-xs text-text-primary hover:bg-void hover:text-signal transition-colors"
             >
               PROFILE
-            </button>
-            <div className="border-t border-bg-border" />
-            <button
-              onClick={() => { setOpen(false); onLogout(); }}
-              className="w-full px-3 py-2 text-left font-mono text-xs text-gray-500 hover:bg-bg-base hover:text-red-400 transition-colors"
-            >
-              LOGOUT
             </button>
           </div>
         </>
@@ -76,13 +92,14 @@ function UserMenu({ onProfile, onLogout, username }) {
 
 function NoApiKeysBanner({ onProfile }) {
   return (
-    <div className="flex-shrink-0 flex items-center justify-center gap-3 px-4 py-2 bg-amber-900/20 border-b border-amber-800/40">
-      <span className="font-mono text-xs text-amber-400">
+    <div className="flex-shrink-0 flex items-center justify-center gap-3 px-4 py-2 bg-warn/10 border-b border-warn/30">
+      <span className="text-warn font-sans text-xs">⚠</span>
+      <span className="font-sans text-xs text-warn">
         Configure your API keys to enable market data and trading.
       </span>
       <button
         onClick={onProfile}
-        className="font-mono text-xs text-amber-500 underline underline-offset-2 hover:text-amber-300 transition-colors"
+        className="font-sans text-xs text-warn underline underline-offset-2 hover:text-text-primary transition-colors"
       >
         Open Profile
       </button>
@@ -112,9 +129,9 @@ function AuthenticatedApp() {
   return (
     <TradingProvider>
       <div className="flex flex-col h-screen overflow-hidden">
+        <NavBar active={page} onChange={setPage} rightSlot={userMenu} />
         <TopBar />
         {!hasApiKeys && <NoApiKeysBanner onProfile={() => setShowProfile(true)} />}
-        <NavBar active={page} onChange={setPage} rightSlot={userMenu} />
         <main className="flex-1 min-h-0 overflow-hidden">
           {page === 'dashboard' && <Dashboard />}
           {page === 'history' && <TradeHistory />}
@@ -131,8 +148,8 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-base flex items-center justify-center">
-        <span className="font-mono text-xs text-gray-500 animate-pulse">LOADING...</span>
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <span className="font-mono text-xs text-text-muted">—</span>
       </div>
     );
   }

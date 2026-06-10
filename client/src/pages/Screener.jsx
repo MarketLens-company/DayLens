@@ -27,7 +27,7 @@ function AddButton({ symbol, onAdd }) {
 
   if (added) {
     return (
-      <span className="text-[10px] font-mono text-green-400">✓ Added</span>
+      <span className="font-mono text-[10px] text-signal">✓ Added</span>
     );
   }
 
@@ -35,7 +35,7 @@ function AddButton({ symbol, onAdd }) {
     <button
       onClick={handleClick}
       disabled={adding}
-      className="text-[10px] font-mono px-2 py-0.5 rounded border border-cyan-400/30 bg-cyan-400/5 text-cyan-400 hover:bg-cyan-400/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="text-signal font-mono text-[10px] border border-signal/30 hover:border-signal px-2 py-1 rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {adding ? '...' : '+ ADD'}
     </button>
@@ -45,7 +45,7 @@ function AddButton({ symbol, onAdd }) {
 function CandidatesTable({ candidates, onAdd }) {
   if (!candidates || candidates.length === 0) {
     return (
-      <div className="text-center text-gray-600 text-xs font-mono py-8">
+      <div className="text-center text-text-muted font-sans text-xs py-8">
         No candidates. Run a scan to populate.
       </div>
     );
@@ -53,48 +53,48 @@ function CandidatesTable({ candidates, onAdd }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs font-mono">
-        <thead>
-          <tr className="border-b border-bg-border text-gray-500 text-[10px] tracking-wider">
-            <th className="text-left px-3 py-2">#</th>
-            <th className="text-left px-3 py-2">SYMBOL</th>
-            <th className="text-right px-3 py-2">SCORE</th>
-            <th className="text-right px-3 py-2">PRICE</th>
-            <th className="text-right px-3 py-2">CHANGE%</th>
-            <th className="text-right px-3 py-2">VOL RATIO</th>
-            <th className="text-right px-3 py-2">DAY HIGH</th>
-            <th className="text-right px-3 py-2">DAY LOW</th>
-            <th className="text-right px-3 py-2">SECTOR</th>
-            <th className="text-right px-3 py-2">ACTION</th>
+      <table className="w-full border-collapse">
+        <thead className="bg-surface sticky top-0 border-b border-border">
+          <tr>
+            <th className="text-left px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">#</th>
+            <th className="text-left px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">SYMBOL</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">SCORE</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">PRICE</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">CHANGE%</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">VOL RATIO</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">DAY HIGH</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">DAY LOW</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">SECTOR</th>
+            <th className="text-right px-4 py-2 font-sans text-[10px] text-text-muted uppercase tracking-wider">ACTION</th>
           </tr>
         </thead>
         <tbody>
           {candidates.map((c, idx) => {
-            let scoreColor = 'text-gray-400';
-            if (c.score >= 70) scoreColor = 'text-green-400';
-            else if (c.score >= 45) scoreColor = 'text-amber-400';
+            let scoreColor = 'text-text-muted';
+            if (c.score >= 70) scoreColor = 'text-signal';
+            else if (c.score >= 45) scoreColor = 'text-warn';
 
             return (
               <tr
                 key={c.symbol}
-                className="border-b border-bg-border/40 hover:bg-bg-hover transition-colors"
+                className={`border-b border-border ${idx % 2 === 0 ? 'bg-void' : 'bg-surface'}`}
               >
-                <td className="px-3 py-2 text-gray-600">{idx + 1}</td>
-                <td className="px-3 py-2">
-                  <span className="font-bold text-gray-200">{c.symbol}</span>
+                <td className="px-4 py-2 font-mono text-xs text-text-muted">{idx + 1}</td>
+                <td className="px-4 py-2">
+                  <span className="font-mono font-bold text-sm text-text-primary">{c.symbol}</span>
                 </td>
-                <td className={`px-3 py-2 text-right font-bold ${scoreColor}`}>{c.score}</td>
-                <td className="px-3 py-2 text-right text-gray-200">{fmtPrice(c.price)}</td>
-                <td className={`px-3 py-2 text-right ${c.changePct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <td className={`px-4 py-2 text-right font-mono text-xs font-bold ${scoreColor}`}>{c.score}</td>
+                <td className="px-4 py-2 text-right font-mono text-xs text-text-primary">{fmtPrice(c.price)}</td>
+                <td className={`px-4 py-2 text-right font-mono text-xs ${c.changePct >= 0 ? 'text-signal' : 'text-loss'}`}>
                   {fmtPct(c.changePct)}
                 </td>
-                <td className="px-3 py-2 text-right text-gray-400">
+                <td className="px-4 py-2 text-right font-mono text-xs text-text-primary">
                   {c.volRatio != null ? `${c.volRatio.toFixed(2)}x` : '—'}
                 </td>
-                <td className="px-3 py-2 text-right text-gray-400">{fmtPrice(c.dayHigh)}</td>
-                <td className="px-3 py-2 text-right text-gray-400">{fmtPrice(c.dayLow)}</td>
-                <td className="px-3 py-2 text-right text-gray-500 text-[10px]">{c.sector || '—'}</td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-4 py-2 text-right font-mono text-xs text-text-primary">{fmtPrice(c.dayHigh)}</td>
+                <td className="px-4 py-2 text-right font-mono text-xs text-text-primary">{fmtPrice(c.dayLow)}</td>
+                <td className="px-4 py-2 text-right font-mono text-[10px] text-text-muted">{c.sector || '—'}</td>
+                <td className="px-4 py-2 text-right">
                   <AddButton symbol={c.symbol} onAdd={onAdd} />
                 </td>
               </tr>
@@ -131,35 +131,35 @@ function UniverseSection() {
   const sectors = Object.keys(bySector).sort();
 
   return (
-    <div className="panel mt-2">
+    <div className="bg-surface border border-border rounded">
       <button
         onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between px-3 py-2 text-xs font-mono text-gray-500 hover:text-gray-400 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2 font-sans text-xs text-text-muted hover:text-text-primary transition-colors"
       >
-        <span className="tracking-widest">SCANNER UNIVERSE ({universe.length || '~200'} symbols)</span>
-        <span className="text-gray-600">{expanded ? '▲ COLLAPSE' : '▼ EXPAND'}</span>
+        <span className="tracking-widest uppercase">SCANNER UNIVERSE ({universe.length || '~200'} symbols)</span>
+        <span className="font-mono text-xs text-text-muted">{expanded ? '▲' : '▼'}</span>
       </button>
 
       {expanded && (
-        <div className="border-t border-bg-border px-3 py-3">
+        <div className="border-t border-border px-4 py-3">
           {loading && (
-            <div className="text-center text-gray-600 text-xs font-mono py-4">Loading universe...</div>
+            <div className="text-center text-text-muted font-sans text-xs py-4">—</div>
           )}
           {!loading && sectors.length === 0 && (
-            <div className="text-center text-gray-600 text-xs font-mono py-4">No data.</div>
+            <div className="text-center text-text-muted font-sans text-xs py-4">No data.</div>
           )}
           {!loading && sectors.length > 0 && (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {sectors.map(sector => (
                 <div key={sector}>
-                  <div className="text-[10px] font-mono text-amber-400 tracking-wider mb-1.5 uppercase">
+                  <div className="font-sans text-[10px] text-warn tracking-wider mb-1.5 uppercase">
                     {sector}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {bySector[sector].map(sym => (
                       <span
                         key={sym}
-                        className="text-[10px] font-mono text-gray-500 bg-bg-base px-1.5 py-0.5 rounded border border-bg-border"
+                        className="font-mono text-[10px] text-text-muted bg-void px-1.5 py-0.5 rounded border border-border"
                       >
                         {sym}
                       </span>
@@ -198,20 +198,20 @@ export default function Screener() {
   const allCandidates = scanData?.candidates || [];
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-y-auto p-2 space-y-2">
+    <div className="bg-void flex flex-col h-full min-h-0 overflow-y-auto p-2 space-y-2">
       {/* Scanner Panel at top — full width */}
       <div className="flex-shrink-0">
         <ScreenerPanel onWatchlistUpdate={handleWatchlistUpdate} />
       </div>
 
       {/* Full candidates table */}
-      <div className="panel flex-shrink-0">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-bg-border">
-          <span className="text-xs font-mono text-gray-500 tracking-widest">
+      <div className="bg-surface border border-border rounded flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+          <span className="font-sans text-xs text-text-muted uppercase tracking-widest">
             ALL CANDIDATES ({allCandidates.length})
           </span>
           {scanData?.scannedAt && (
-            <span className="text-xs font-mono text-gray-600">
+            <span className="font-mono text-xs text-text-muted">
               {scanData.scanDuration ? `${(scanData.scanDuration / 1000).toFixed(1)}s scan` : ''}
             </span>
           )}

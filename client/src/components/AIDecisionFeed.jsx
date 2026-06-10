@@ -1,25 +1,31 @@
 import React, { useRef, useEffect } from 'react';
 import { useTrading } from '../context/TradingContext';
-import { fmtPrice, fmtDateTime, bgForAction, colorForAction } from '../utils/format';
+import { fmtPrice, fmtDateTime } from '../utils/format';
+
+function signalBadgeClass(action) {
+  switch (action) {
+    case 'BUY':  return 'bg-signal/10 text-signal border border-signal/20 font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
+    case 'SELL': return 'bg-loss/10 text-loss border border-loss/20 font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
+    default:     return 'bg-surface text-text-muted border border-border font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
+  }
+}
 
 function ConfidenceBar({ value }) {
   const pct = Math.round((value || 0) * 100);
-  const color = pct >= 75 ? 'bg-green-400' : pct >= 50 ? 'bg-amber-400' : 'bg-red-400';
+  const fillColor = pct >= 50 ? 'bg-signal' : 'bg-loss';
   return (
     <div className="flex items-center gap-1.5">
-      <div className="flex-1 h-1 bg-bg-border rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      <div className="flex-1 h-1 bg-border rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${fillColor}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="font-mono text-[10px] text-gray-500 w-7">{pct}%</span>
+      <span className="font-mono text-[10px] text-text-muted w-7">{pct}%</span>
     </div>
   );
 }
 
 export default function AIDecisionFeed() {
   const { decisions, selectedSymbol } = useTrading();
-  const endRef = useRef(null);
   const containerRef = useRef(null);
-  const isAtBottomRef = useRef(true);
 
   // Auto-scroll to top on new decision (newest is first)
   useEffect(() => {
@@ -33,21 +39,19 @@ export default function AIDecisionFeed() {
     : decisions;
 
   return (
-    <div className="panel flex flex-col h-full overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-bg-border flex-shrink-0">
-        <span className="text-xs font-mono text-gray-500 tracking-widest">AI DECISION FEED</span>
-        <div className="flex items-center gap-2">
-          {selectedSymbol && (
-            <span className="text-xs font-mono text-cyan-400/70">{selectedSymbol}</span>
-          )}
-          <span className="text-xs font-mono text-gray-600">{filtered.length} decisions</span>
-        </div>
+    <div className="bg-surface border border-border rounded flex flex-col h-full overflow-hidden">
+      <div className="border-b border-border px-4 py-2 flex items-center gap-2 flex-shrink-0">
+        <span className="font-sans text-xs text-text-muted uppercase tracking-widest">AI DECISION FEED</span>
+        {selectedSymbol && (
+          <span className="font-mono text-xs text-signal">{selectedSymbol}</span>
+        )}
+        <span className="ml-auto font-mono text-xs text-text-muted">{filtered.length}</span>
       </div>
 
-      <div ref={containerRef} className="flex-1 scroll-panel overflow-y-auto p-2 space-y-2">
+      <div ref={containerRef} className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="text-center text-gray-600 text-xs font-mono py-6">
-            Waiting for AI analysis...
+          <div className="text-center text-text-muted font-sans text-xs py-6 px-4 leading-relaxed">
+            Waiting for next analysis cycle · Claude analyzes each symbol every 5 min during market hours
           </div>
         ) : (
           filtered.map((dec, i) => (
@@ -61,25 +65,25 @@ export default function AIDecisionFeed() {
 
 function DecisionCard({ dec }) {
   return (
-    <div className={`card p-2.5 animate-slide-down ${dec.executed ? 'border-l-2 border-l-green-400/60' : ''}`}>
+    <div className={`border-b border-border px-4 py-3 hover:bg-void/30 ${dec.executed ? 'border-l-2 border-l-signal' : ''}`}>
       <div className="flex items-start justify-between mb-1.5">
-        <div className="flex items-center gap-2">
-          <span className="font-mono font-bold text-xs text-gray-200">{dec.symbol}</span>
-          <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${bgForAction(dec.action)}`}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-mono font-bold text-xs text-text-primary">{dec.symbol}</span>
+          <span className={signalBadgeClass(dec.action)}>
             {dec.action}
           </span>
           {dec.quantity > 0 && dec.action !== 'HOLD' && (
-            <span className="text-[10px] font-mono text-gray-500">{dec.quantity} sh</span>
+            <span className="font-mono text-[10px] text-text-muted">{dec.quantity} sh</span>
           )}
           {dec.executed ? (
-            <span className="text-[10px] font-mono text-green-400/80">✓ EXECUTED</span>
+            <span className="font-mono text-[10px] text-signal">✓ EXECUTED</span>
           ) : dec.skip_reason ? (
-            <span className="text-[10px] font-mono text-gray-600 truncate max-w-[100px]" title={dec.skip_reason}>
+            <span className="font-mono text-[10px] text-text-muted truncate max-w-[100px]" title={dec.skip_reason}>
               ⊘ skipped
             </span>
           ) : null}
         </div>
-        <span className="text-[10px] font-mono text-gray-600 shrink-0 ml-2">
+        <span className="font-mono text-[10px] text-text-muted shrink-0 ml-2">
           {fmtDateTime(dec.created_at || dec.timestamp)}
         </span>
       </div>
@@ -87,24 +91,24 @@ function DecisionCard({ dec }) {
       <ConfidenceBar value={dec.confidence} />
 
       {dec.reasoning && (
-        <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed font-sans">
+        <p className="font-sans text-xs text-text-muted mt-1 leading-relaxed">
           {dec.reasoning}
         </p>
       )}
 
       {(dec.stop_loss || dec.take_profit) && (
-        <div className="flex gap-3 mt-1.5 text-[10px] font-mono">
+        <div className="flex gap-3 mt-1.5 font-mono text-[10px]">
           {dec.stop_loss && (
-            <span className="text-red-400/70">SL {fmtPrice(dec.stop_loss)}</span>
+            <span className="text-loss">SL {fmtPrice(dec.stop_loss)}</span>
           )}
           {dec.take_profit && (
-            <span className="text-green-400/70">TP {fmtPrice(dec.take_profit)}</span>
+            <span className="text-signal">TP {fmtPrice(dec.take_profit)}</span>
           )}
         </div>
       )}
 
       {dec.skip_reason && (
-        <p className="text-[10px] text-gray-600 mt-1 font-mono">{dec.skip_reason}</p>
+        <p className="font-mono text-[10px] text-text-muted mt-1">{dec.skip_reason}</p>
       )}
     </div>
   );

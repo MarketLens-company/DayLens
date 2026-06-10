@@ -40,11 +40,11 @@ export default function Dashboard() {
           <div className="flex-shrink-0">
             <button
               onClick={() => setScannerExpanded(e => !e)}
-              className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-mono text-gray-500 hover:text-gray-400 bg-bg-panel border border-bg-border rounded transition-colors"
+              className="w-full flex items-center justify-between px-3 py-1.5 font-sans text-xs text-text-muted hover:text-text-primary bg-surface border border-border rounded transition-colors"
             >
-              <span className="tracking-widest">MARKET SCANNER</span>
-              <span className="text-gray-600 text-[10px]">
-                {scannerExpanded ? '▲ COLLAPSE' : '▼ EXPAND'}
+              <span className="tracking-widest uppercase">MARKET SCANNER</span>
+              <span className="font-mono text-[10px] text-text-muted">
+                {scannerExpanded ? '▲' : '▼'}
               </span>
             </button>
             {scannerExpanded && (

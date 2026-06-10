@@ -44,22 +44,22 @@ export function fmtDateTime(ts) {
 }
 
 export function colorForValue(n) {
-  if (n == null || isNaN(n)) return 'text-gray-400';
-  return n >= 0 ? 'text-green-400' : 'text-red-400';
+  if (n == null || isNaN(n)) return 'text-text-muted';
+  return n >= 0 ? 'text-signal' : 'text-loss';
 }
 
 export function colorForAction(action) {
   switch (action) {
-    case 'BUY': return 'text-green-400';
-    case 'SELL': return 'text-red-400';
-    default: return 'text-amber-400';
+    case 'BUY': return 'text-signal';
+    case 'SELL': return 'text-loss';
+    default: return 'text-warn';
   }
 }
 
 export function bgForAction(action) {
   switch (action) {
-    case 'BUY': return 'bg-green-400/10 text-green-400 border border-green-400/30';
-    case 'SELL': return 'bg-red-400/10 text-red-400 border border-red-400/30';
-    default: return 'bg-amber-400/10 text-amber-400 border border-amber-400/30';
+    case 'BUY': return 'bg-signal/10 text-signal border border-signal/20';
+    case 'SELL': return 'bg-loss/10 text-loss border border-loss/20';
+    default: return 'bg-surface text-text-muted border border-border';
   }
 }

@@ -16,8 +16,8 @@ export default function Settings() {
   }, [config]);
 
   if (!form) return (
-    <div className="flex items-center justify-center h-full text-gray-600 font-mono text-sm">
-      Loading config...
+    <div className="flex items-center justify-center h-full font-mono text-text-muted text-sm">
+      —
     </div>
   );
 
@@ -44,39 +44,39 @@ export default function Settings() {
   const autoTradeEnabled = form.auto_trade_enabled === 'true';
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-y-auto p-4 gap-4 max-w-3xl mx-auto w-full">
-      <h2 className="text-sm font-mono text-gray-400 tracking-widest mt-2">CONFIGURATION</h2>
+    <div className="bg-void flex flex-col h-full min-h-0 overflow-y-auto px-6 py-6 max-w-2xl">
+      <h2 className="font-sans text-[10px] text-text-muted tracking-widest uppercase mt-2 mb-4 pb-2 border-b border-border">CONFIGURATION</h2>
 
       {/* Auto-trade master toggle */}
-      <section className="panel p-4">
+      <section className="bg-surface border border-border rounded p-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-mono text-sm font-semibold text-gray-200 mb-0.5">Autonomous Trading</h3>
-            <p className="text-xs text-gray-500">When enabled, the AI will automatically execute orders above the confidence threshold.</p>
+            <h3 className="font-sans text-sm text-text-primary font-medium mb-0.5">Autonomous Trading</h3>
+            <p className="font-sans text-xs text-text-muted">When enabled, the AI will automatically execute orders above the confidence threshold.</p>
           </div>
           <button
             onClick={() => setForm(f => ({ ...f, auto_trade_enabled: autoTradeEnabled ? 'false' : 'true' }))}
             className={`relative w-14 h-7 rounded-full transition-colors flex-shrink-0 ${
-              autoTradeEnabled ? 'bg-green-400' : 'bg-bg-border'
+              autoTradeEnabled ? 'bg-signal' : 'bg-border'
             }`}
           >
             <span
-              className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+              className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${
                 autoTradeEnabled ? 'translate-x-8' : 'translate-x-1'
               }`}
             />
           </button>
         </div>
         {autoTradeEnabled && (
-          <p className="text-xs font-mono text-green-400 mt-2 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-green-400 rounded-full blink" /> LIVE TRADING ACTIVE — REAL ORDERS WILL BE PLACED
+          <p className="font-mono text-xs text-signal mt-2 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 bg-signal rounded-full pulse-live" /> LIVE TRADING ACTIVE — REAL ORDERS WILL BE PLACED
           </p>
         )}
       </section>
 
       {/* Trading params */}
-      <section className="panel p-4 space-y-4">
-        <h3 className="font-mono text-xs text-gray-500 tracking-widest">RISK PARAMETERS</h3>
+      <section className="bg-surface border border-border rounded p-4 mb-4 space-y-4">
+        <h3 className="font-sans text-[10px] text-text-muted tracking-widest uppercase pb-2 border-b border-border">RISK PARAMETERS</h3>
 
         <SliderField
           label="Confidence Threshold"
@@ -103,7 +103,7 @@ export default function Settings() {
           min={0.01} max={0.10} step={0.005}
           format={v => (v * 100).toFixed(1) + '%'}
           onChange={v => setForm(f => ({ ...f, daily_loss_limit_pct: String(v) }))}
-          color="red"
+          color="loss"
         />
 
         <NumberField
@@ -124,24 +124,22 @@ export default function Settings() {
       </section>
 
       {/* Save button */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-4">
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`px-6 py-2 rounded font-mono text-sm font-semibold transition-all ${
-            saved
-              ? 'bg-green-400/20 text-green-400 border border-green-400/40'
-              : 'bg-cyan-400/15 text-cyan-400 border border-cyan-400/40 hover:bg-cyan-400/25'
+          className={`bg-signal text-void font-mono text-xs font-bold px-4 py-2 rounded transition-colors disabled:opacity-50 ${
+            saved ? 'bg-signal/70' : 'hover:bg-[#00BFA0]'
           }`}
         >
           {saving ? 'SAVING...' : saved ? '✓ SAVED' : 'SAVE CHANGES'}
         </button>
-        {error && <span className="text-red-400 text-xs font-mono">{error}</span>}
+        {error && <span className="text-loss text-xs font-mono">{error}</span>}
       </div>
 
       {/* Watchlist management */}
-      <section className="panel p-4">
-        <h3 className="font-mono text-xs text-gray-500 tracking-widest mb-3">WATCHLIST</h3>
+      <section className="bg-surface border border-border rounded p-4 mb-4">
+        <h3 className="font-sans text-[10px] text-text-muted tracking-widest uppercase pb-2 mb-4 border-b border-border">WATCHLIST</h3>
 
         <div className="flex gap-2 mb-3">
           <input
@@ -150,11 +148,11 @@ export default function Settings() {
             onChange={e => setNewSymbol(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && handleAddSymbol()}
             placeholder="ADD TICKER..."
-            className="flex-1 bg-bg-base border border-bg-border rounded px-3 py-1.5 text-sm font-mono text-gray-200 placeholder-gray-700 focus:outline-none focus:border-cyan-400/50"
+            className="flex-1 bg-void border border-border rounded px-3 py-1.5 font-mono text-sm text-text-primary placeholder-text-muted focus:shadow-[0_0_0_2px_#00D4AA] outline-none transition-shadow"
           />
           <button
             onClick={handleAddSymbol}
-            className="px-4 py-1.5 bg-cyan-400/10 text-cyan-400 border border-cyan-400/30 rounded font-mono text-sm hover:bg-cyan-400/20 transition-colors"
+            className="bg-signal text-void font-mono text-xs font-bold px-4 py-2 rounded hover:bg-[#00BFA0] transition-colors"
           >
             ADD
           </button>
@@ -162,11 +160,11 @@ export default function Settings() {
 
         <div className="flex flex-wrap gap-2">
           {watchlist.map(sym => (
-            <div key={sym} className="flex items-center gap-1.5 bg-bg-card border border-bg-border rounded px-2.5 py-1">
-              <span className="font-mono text-sm font-bold text-gray-200">{sym}</span>
+            <div key={sym} className="flex items-center gap-1.5 bg-void border border-border rounded px-2.5 py-1">
+              <span className="font-mono text-sm font-bold text-text-primary">{sym}</span>
               <button
                 onClick={() => removeFromWatchlist(sym)}
-                className="text-gray-600 hover:text-red-400 text-xs transition-colors ml-1"
+                className="font-mono text-text-muted hover:text-loss text-xs transition-colors ml-1"
                 title={`Remove ${sym}`}
               >
                 ✕
@@ -177,7 +175,7 @@ export default function Settings() {
       </section>
 
       {/* Info */}
-      <section className="panel p-4 text-xs font-mono text-gray-600 space-y-1">
+      <section className="bg-surface border border-border rounded p-4 font-sans text-xs text-text-muted space-y-1">
         <p>• All trading uses Alpaca paper trading — no real money at risk</p>
         <p>• Risk management rules are enforced server-side and cannot be bypassed</p>
         <p>• Auto-trading only executes during market hours (9:30am–4:00pm ET)</p>
@@ -187,21 +185,15 @@ export default function Settings() {
   );
 }
 
-function SliderField({ label, hint, value, min, max, step, format, onChange, color = 'cyan' }) {
-  const pct = ((value - min) / (max - min)) * 100;
-  const colors = {
-    cyan: 'accent-cyan-400',
-    red: 'accent-red-400',
-  };
-
+function SliderField({ label, hint, value, min, max, step, format, onChange, color = 'signal' }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <div>
-          <span className="text-sm text-gray-300 font-sans">{label}</span>
-          <span className="text-xs text-gray-600 ml-2 font-sans">{hint}</span>
+        <div className="flex items-baseline gap-2 w-48 shrink-0">
+          <span className="font-sans text-sm text-text-muted">{label}</span>
         </div>
-        <span className={`num font-mono text-sm font-bold ${color === 'red' ? 'text-red-400' : 'text-cyan-400'}`}>
+        <span className="font-sans text-xs text-text-muted ml-2">{hint}</span>
+        <span className={`font-mono text-sm font-bold ml-auto ${color === 'loss' ? 'text-loss' : 'text-signal'}`}>
           {format(value)}
         </span>
       </div>
@@ -210,9 +202,10 @@ function SliderField({ label, hint, value, min, max, step, format, onChange, col
         min={min} max={max} step={step}
         value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
-        className={`w-full h-1.5 rounded-full appearance-none bg-bg-border ${colors[color]} cursor-pointer`}
+        className="w-full h-1.5 rounded-full appearance-none bg-border cursor-pointer"
+        style={{ accentColor: color === 'loss' ? '#EF4444' : '#00D4AA' }}
       />
-      <div className="flex justify-between text-[10px] text-gray-700 font-mono mt-0.5">
+      <div className="flex justify-between font-mono text-[10px] text-text-muted mt-0.5">
         <span>{format(min)}</span>
         <span>{format(max)}</span>
       </div>
@@ -223,19 +216,19 @@ function SliderField({ label, hint, value, min, max, step, format, onChange, col
 function NumberField({ label, hint, value, min, max, onChange }) {
   return (
     <div className="flex items-center justify-between">
-      <div>
-        <span className="text-sm text-gray-300 font-sans">{label}</span>
-        <span className="text-xs text-gray-600 ml-2 font-sans">{hint}</span>
+      <div className="flex items-baseline gap-2">
+        <span className="font-sans text-sm text-text-muted w-48 shrink-0">{label}</span>
+        <span className="font-sans text-xs text-text-muted">{hint}</span>
       </div>
       <div className="flex items-center gap-1">
         <button
           onClick={() => onChange(Math.max(min, value - 1))}
-          className="w-6 h-6 flex items-center justify-center bg-bg-card border border-bg-border rounded text-gray-400 hover:text-gray-200 hover:border-gray-500 transition-colors"
+          className="w-6 h-6 flex items-center justify-center bg-void border border-border rounded font-mono text-text-muted hover:text-text-primary hover:border-text-muted transition-colors"
         >−</button>
-        <span className="num font-mono text-sm text-gray-200 w-8 text-center">{value}</span>
+        <span className="font-mono text-sm text-text-primary w-8 text-center">{value}</span>
         <button
           onClick={() => onChange(Math.min(max, value + 1))}
-          className="w-6 h-6 flex items-center justify-center bg-bg-card border border-bg-border rounded text-gray-400 hover:text-gray-200 hover:border-gray-500 transition-colors"
+          className="w-6 h-6 flex items-center justify-center bg-void border border-border rounded font-mono text-text-muted hover:text-text-primary hover:border-text-muted transition-colors"
         >+</button>
       </div>
     </div>

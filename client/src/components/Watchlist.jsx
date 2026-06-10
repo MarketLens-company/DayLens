@@ -1,20 +1,28 @@
 import React from 'react';
 import { useTrading } from '../context/TradingContext';
-import { fmtPrice, fmtPct, fmtVolume, colorForValue, bgForAction } from '../utils/format';
+import { fmtPrice, fmtPct, fmtVolume } from '../utils/format';
+
+function signalBadgeClass(action) {
+  switch (action) {
+    case 'BUY':  return 'bg-signal/10 text-signal border border-signal/20 font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
+    case 'SELL': return 'bg-loss/10 text-loss border border-loss/20 font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
+    default:     return 'bg-surface text-text-muted border border-border font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
+  }
+}
 
 export default function Watchlist() {
   const { watchlist, quotes, signals, selectedSymbol, setSelectedSymbol, triggerAnalysis } = useTrading();
 
   return (
-    <div className="panel flex flex-col h-full overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-bg-border flex-shrink-0">
-        <span className="text-xs font-mono text-gray-500 tracking-widest">WATCHLIST</span>
-        <span className="text-xs font-mono text-gray-600">{watchlist.length} symbols</span>
+    <div className="w-70 bg-surface border-r border-border flex flex-col h-full overflow-hidden" style={{ width: '280px' }}>
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
+        <span className="font-sans text-xs text-text-muted uppercase tracking-widest">WATCHLIST</span>
+        <span className="font-mono text-xs text-text-muted">{watchlist.length}</span>
       </div>
 
-      <div className="flex-1 scroll-panel overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {watchlist.length === 0 && (
-          <div className="text-center text-gray-600 text-xs font-mono py-8">
+          <div className="text-center text-text-muted font-sans text-xs py-8 px-4">
             No symbols. Add via Settings.
           </div>
         )}
@@ -30,35 +38,35 @@ export default function Watchlist() {
             <button
               key={sym}
               onClick={() => setSelectedSymbol(sym)}
-              className={`w-full text-left px-3 py-2.5 border-b border-bg-border/50 transition-colors ${
+              className={`w-full text-left px-4 py-3 border-b border-border cursor-pointer transition-colors ${
                 isSelected
-                  ? 'bg-cyan-400/5 border-l-2 border-l-cyan-400'
-                  : 'hover:bg-bg-hover border-l-2 border-l-transparent'
+                  ? 'bg-void border-l-2 border-l-signal'
+                  : 'hover:bg-void/50 border-l-2 border-l-transparent'
               }`}
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <span className={`font-mono font-bold text-sm ${isSelected ? 'text-cyan-400' : 'text-gray-200'}`}>
+                  <span className="font-mono font-bold text-sm text-text-primary">
                     {sym}
                   </span>
                   {sig && (
-                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${bgForAction(sig.action)}`}>
+                    <span className={signalBadgeClass(sig.action)}>
                       {sig.action}
                     </span>
                   )}
                 </div>
-                <span className={`num font-mono text-sm font-medium ${colorForValue(changePct)}`}>
+                <span className={`font-mono text-xs ${changePct == null ? 'text-text-primary' : changePct >= 0 ? 'text-signal' : 'text-loss'}`}>
                   {fmtPct(changePct)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="num font-mono text-sm text-gray-200">{fmtPrice(price)}</span>
+                <span className="font-mono text-sm text-text-primary">{fmtPrice(price)}</span>
                 <div className="flex items-center gap-2">
                   {volume && (
-                    <span className="font-mono text-xs text-gray-600">{fmtVolume(volume)}</span>
+                    <span className="font-sans text-[10px] text-text-muted">{fmtVolume(volume)}</span>
                   )}
                   {sig && (
-                    <span className="font-mono text-[10px] text-gray-600">
+                    <span className="font-mono text-[10px] text-text-muted">
                       {(sig.confidence * 100).toFixed(0)}%
                     </span>
                   )}
@@ -69,14 +77,14 @@ export default function Watchlist() {
         })}
       </div>
 
-      {/* Trigger analysis button for selected */}
+      {/* Analyze button */}
       {selectedSymbol && (
-        <div className="px-3 py-2 border-t border-bg-border flex-shrink-0">
+        <div className="px-4 pb-4 pt-2 flex-shrink-0">
           <button
             onClick={() => triggerAnalysis(selectedSymbol)}
-            className="w-full text-xs font-mono text-amber-400 border border-amber-400/30 bg-amber-400/5 hover:bg-amber-400/10 rounded py-1.5 transition-colors"
+            className="w-full bg-void border border-border text-signal font-mono text-xs tracking-widest hover:border-signal transition-colors px-4 py-2 rounded"
           >
-            ⚡ ANALYZE {selectedSymbol}
+            ANALYZE {selectedSymbol}
           </button>
         </div>
       )}
