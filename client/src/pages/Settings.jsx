@@ -45,10 +45,13 @@ export default function Settings() {
 
   return (
     <div className="bg-void flex flex-col h-full min-h-0 overflow-y-auto px-6 py-6 max-w-2xl">
-      <h2 className="font-sans text-[10px] text-text-muted tracking-widest uppercase mt-2 mb-4 pb-2 border-b border-border">CONFIGURATION</h2>
+      <div className="flex items-center gap-2 mt-2 mb-4 pb-2 border-b border-border">
+        <span className="w-1 h-1 rounded-full bg-signal/40" />
+        <h2 className="font-sans text-[10px] text-text-muted tracking-[0.15em] uppercase">Configuration</h2>
+      </div>
 
       {/* Auto-trade master toggle */}
-      <section className="bg-surface border border-border rounded p-4 mb-4">
+      <section className="bracket bg-surface border border-border rounded-sm p-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-sans text-sm text-text-primary font-medium mb-0.5">Autonomous Trading</h3>
@@ -75,7 +78,7 @@ export default function Settings() {
       </section>
 
       {/* Trading params */}
-      <section className="bg-surface border border-border rounded p-4 mb-4 space-y-4">
+      <section className="bracket bg-surface border border-border rounded-sm p-4 mb-4 space-y-4">
         <h3 className="font-sans text-[10px] text-text-muted tracking-widest uppercase pb-2 border-b border-border">RISK PARAMETERS</h3>
 
         <SliderField
@@ -138,7 +141,7 @@ export default function Settings() {
       </div>
 
       {/* Watchlist management */}
-      <section className="bg-surface border border-border rounded p-4 mb-4">
+      <section className="bracket bg-surface border border-border rounded-sm p-4 mb-4">
         <h3 className="font-sans text-[10px] text-text-muted tracking-widest uppercase pb-2 mb-4 border-b border-border">WATCHLIST</h3>
 
         <div className="flex gap-2 mb-3">

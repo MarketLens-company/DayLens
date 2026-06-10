@@ -10,37 +10,42 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 
 const NAV = [
-  { id: 'dashboard', label: 'DASHBOARD' },
-  { id: 'history', label: 'TRADE HISTORY' },
-  { id: 'screener', label: 'SCREENER' },
-  { id: 'settings', label: 'SETTINGS' },
+  { id: 'dashboard',  label: 'DASHBOARD' },
+  { id: 'history',    label: 'TRADE HISTORY' },
+  { id: 'screener',   label: 'SCREENER' },
+  { id: 'settings',   label: 'SETTINGS' },
 ];
 
 function NavBar({ active, onChange, rightSlot }) {
   return (
-    <nav className="flex items-center gap-1 px-4 h-12 bg-void border-b border-border flex-shrink-0">
+    <nav className="flex items-center px-4 h-11 bg-void border-b border-border flex-shrink-0 gap-0">
       {/* Logo */}
-      <span className="font-mono font-bold text-base tracking-wide mr-6 whitespace-nowrap flex items-center gap-1.5">
-        <span className="text-signal text-sm">◆</span>
-        <span className="text-text-primary">DayLens</span>
-      </span>
+      <div className="flex items-center gap-2 mr-8 shrink-0">
+        <span className="text-signal font-mono text-sm leading-none">◆</span>
+        <span className="font-mono font-bold text-sm text-text-primary tracking-wide">DayLens</span>
+      </div>
 
       {/* Nav tabs */}
-      {NAV.map(item => (
-        <button
-          key={item.id}
-          onClick={() => onChange(item.id)}
-          className={`px-3 h-12 font-sans text-xs uppercase tracking-widest transition-colors border-b-2 ${
-            active === item.id
-              ? 'text-signal border-signal'
-              : 'text-text-muted hover:text-text-primary border-transparent'
-          }`}
-        >
-          {item.label}
-        </button>
-      ))}
+      <div className="flex items-stretch h-full">
+        {NAV.map(item => (
+          <button
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className={`relative px-4 h-full font-sans text-[11px] uppercase tracking-[0.1em] transition-colors ${
+              active === item.id
+                ? 'text-signal'
+                : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            {item.label}
+            {active === item.id && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-signal" />
+            )}
+          </button>
+        ))}
+      </div>
 
-      {/* Right-aligned user menu slot */}
+      {/* Right slot */}
       {rightSlot && <div className="ml-auto">{rightSlot}</div>}
     </nav>
   );
@@ -50,25 +55,33 @@ function UserMenu({ onProfile, onLogout, username }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="relative flex items-center gap-3">
+    <div className="relative flex items-center gap-4">
       {/* Live indicator */}
       <div className="flex items-center gap-1.5">
-        <span className="pulse-live text-signal text-xs">●</span>
-        <span className="text-text-muted font-sans text-xs tracking-widest">LIVE</span>
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full bg-signal signal-ring pulse-live"
+        />
+        <span className="font-mono text-[10px] text-text-muted tracking-widest">LIVE</span>
       </div>
 
-      {/* Username chip */}
+      {/* Divider */}
+      <span className="text-border font-mono text-xs">│</span>
+
+      {/* Username */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="bg-surface border border-border rounded px-2 py-1 font-sans text-xs text-text-primary hover:border-text-muted transition-colors"
+        className="flex items-center gap-1.5 font-mono text-xs text-text-primary hover:text-signal transition-colors"
       >
+        <span className="w-4 h-4 rounded-sm bg-signal/15 border border-signal/20 flex items-center justify-center text-signal text-[9px] font-bold">
+          {username?.[0]?.toUpperCase() || '?'}
+        </span>
         {username}
       </button>
 
       {/* Logout */}
       <button
         onClick={onLogout}
-        className="text-text-muted hover:text-loss font-sans text-xs transition-colors"
+        className="font-sans text-[11px] text-text-muted hover:text-loss transition-colors tracking-wide"
       >
         LOGOUT
       </button>
@@ -76,12 +89,12 @@ function UserMenu({ onProfile, onLogout, username }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 w-36 bg-surface border border-border rounded z-20 overflow-hidden">
+          <div className="absolute right-0 top-full mt-1 w-36 bg-surface border border-border rounded-sm z-20 overflow-hidden">
             <button
               onClick={() => { setOpen(false); onProfile(); }}
-              className="w-full px-3 py-2 text-left font-sans text-xs text-text-primary hover:bg-void hover:text-signal transition-colors"
+              className="w-full px-3 py-2.5 text-left font-sans text-xs text-text-muted hover:text-signal hover:bg-void transition-colors tracking-widest uppercase"
             >
-              PROFILE
+              Profile & Keys
             </button>
           </div>
         </>
@@ -92,16 +105,16 @@ function UserMenu({ onProfile, onLogout, username }) {
 
 function NoApiKeysBanner({ onProfile }) {
   return (
-    <div className="flex-shrink-0 flex items-center justify-center gap-3 px-4 py-2 bg-warn/10 border-b border-warn/30">
-      <span className="text-warn font-sans text-xs">⚠</span>
-      <span className="font-sans text-xs text-warn">
+    <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2 bg-warn/8 border-b border-warn/20">
+      <span className="w-1 h-1 rounded-full bg-warn shrink-0" />
+      <span className="font-sans text-xs text-warn/90">
         Configure your API keys to enable market data and trading.
       </span>
       <button
         onClick={onProfile}
-        className="font-sans text-xs text-warn underline underline-offset-2 hover:text-text-primary transition-colors"
+        className="font-mono text-[11px] text-warn/80 underline underline-offset-2 hover:text-warn transition-colors ml-auto shrink-0"
       >
-        Open Profile
+        Open Profile →
       </button>
     </div>
   );
@@ -134,9 +147,9 @@ function AuthenticatedApp() {
         {!hasApiKeys && <NoApiKeysBanner onProfile={() => setShowProfile(true)} />}
         <main className="flex-1 min-h-0 overflow-hidden">
           {page === 'dashboard' && <Dashboard />}
-          {page === 'history' && <TradeHistory />}
-          {page === 'screener' && <Screener />}
-          {page === 'settings' && <Settings />}
+          {page === 'history'   && <TradeHistory />}
+          {page === 'screener'  && <Screener />}
+          {page === 'settings'  && <Settings />}
         </main>
       </div>
     </TradingProvider>
@@ -149,16 +162,12 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-void flex items-center justify-center">
-        <span className="font-mono text-xs text-text-muted">—</span>
+        <span className="font-mono text-xs text-text-muted animate-pulse">◆</span>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
-  return <AuthenticatedApp />;
+  return isAuthenticated ? <AuthenticatedApp /> : <Login />;
 }
 
 export default function App() {

@@ -16,35 +16,37 @@ export default function Dashboard() {
   }, [refetch]);
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      {/* Indicators bar below top bar */}
+    <div className="flex flex-col h-full min-h-0 bg-void">
       <IndicatorsBar />
 
-      {/* Main grid */}
-      <div className="flex flex-1 min-h-0 gap-2 p-2 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left: watchlist */}
-        <div className="w-48 flex-shrink-0 flex flex-col">
-          <Watchlist />
-        </div>
+        <Watchlist />
 
         {/* Center: chart + positions + scanner */}
-        <div className="flex-1 flex flex-col gap-2 min-w-0 overflow-hidden">
-          <div className="flex-1 min-h-0">
+        <div className="flex-1 flex flex-col gap-0 min-w-0 overflow-hidden border-r border-border">
+          {/* Chart takes most space */}
+          <div className="flex-1 min-h-0 p-2 pb-1">
             <ChartPanel />
           </div>
-          <div className="h-44 flex-shrink-0">
+
+          {/* Positions panel */}
+          <div className="h-[170px] flex-shrink-0 px-2 pb-1">
             <PositionsPanel />
           </div>
 
-          {/* Collapsible Market Scanner */}
-          <div className="flex-shrink-0">
+          {/* Collapsible scanner */}
+          <div className="flex-shrink-0 px-2 pb-2">
             <button
               onClick={() => setScannerExpanded(e => !e)}
-              className="w-full flex items-center justify-between px-3 py-1.5 font-sans text-xs text-text-muted hover:text-text-primary bg-surface border border-border rounded transition-colors"
+              className="w-full flex items-center justify-between px-3 py-1.5 font-sans text-[10px] text-text-muted hover:text-text-primary bg-surface border border-border rounded-sm transition-colors tracking-widest uppercase"
             >
-              <span className="tracking-widest uppercase">MARKET SCANNER</span>
-              <span className="font-mono text-[10px] text-text-muted">
-                {scannerExpanded ? '▲' : '▼'}
+              <span className="flex items-center gap-2">
+                <span className="text-signal/50 text-[8px]">◈</span>
+                Market Scanner
+              </span>
+              <span className="font-mono text-[10px] text-text-muted/50">
+                {scannerExpanded ? '▲ COLLAPSE' : '▼ EXPAND'}
               </span>
             </button>
             {scannerExpanded && (
@@ -56,7 +58,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right: AI decision feed */}
-        <div className="w-72 flex-shrink-0 flex flex-col">
+        <div className="w-72 flex-shrink-0 flex flex-col p-2">
           <AIDecisionFeed />
         </div>
       </div>

@@ -33,9 +33,9 @@ export default function TradeHistory() {
   const winRate = displayed.length ? (wins / displayed.length) * 100 : 0;
 
   return (
-    <div className="bg-void flex flex-col h-full min-h-0 p-3 gap-3">
+    <div className="bg-void flex flex-col h-full min-h-0 p-3 gap-2.5">
       {/* Stats bar */}
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <StatCard label="Total Trades" value={displayed.length} />
         <StatCard label="Win Rate" value={winRate.toFixed(1) + '%'} color={winRate >= 50 ? 'text-signal' : 'text-loss'} />
         <StatCard label="Total P&L" value={(totalPnl >= 0 ? '+' : '') + '$' + fmtNum(totalPnl)} color={totalPnl >= 0 ? 'text-signal' : 'text-loss'} />
@@ -73,7 +73,7 @@ export default function TradeHistory() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 bg-surface border border-border rounded overflow-hidden flex flex-col min-h-0">
+      <div className="flex-1 bracket bg-surface border border-border rounded-sm overflow-hidden flex flex-col min-h-0">
         <table className="w-full text-xs">
           <thead className="bg-surface border-b border-border flex-shrink-0">
             <tr>
@@ -165,9 +165,9 @@ function TradeRow({ trade, idx }) {
 
 function StatCard({ label, value, color = 'text-text-primary' }) {
   return (
-    <div className="bg-surface border border-border rounded px-4 py-2 flex-1 text-center">
-      <div className="font-sans text-[10px] text-text-muted uppercase tracking-wider mb-1">{label}</div>
-      <div className={`font-mono font-bold text-base ${color}`}>{value}</div>
+    <div className="bg-surface border border-border rounded-sm px-4 py-2.5 flex-1 flex flex-col gap-1">
+      <div className="font-sans text-[9px] text-text-muted/60 uppercase tracking-[0.15em]">{label}</div>
+      <div className={`font-mono font-bold text-base leading-none ${color}`}>{value}</div>
     </div>
   );
 }

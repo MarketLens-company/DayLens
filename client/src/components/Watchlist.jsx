@@ -2,74 +2,96 @@ import React from 'react';
 import { useTrading } from '../context/TradingContext';
 import { fmtPrice, fmtPct, fmtVolume } from '../utils/format';
 
-function signalBadgeClass(action) {
-  switch (action) {
-    case 'BUY':  return 'bg-signal/10 text-signal border border-signal/20 font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
-    case 'SELL': return 'bg-loss/10 text-loss border border-loss/20 font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
-    default:     return 'bg-surface text-text-muted border border-border font-mono text-[10px] px-1.5 py-0.5 rounded-sm';
-  }
+function ActionBadge({ action }) {
+  if (!action) return null;
+  const styles = {
+    BUY:  'bg-signal/10 text-signal border-signal/20',
+    SELL: 'bg-loss/10 text-loss border-loss/20',
+    HOLD: 'bg-void text-text-muted border-border',
+  };
+  return (
+    <span className={`font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm border tracking-widest ${styles[action] || styles.HOLD}`}>
+      {action}
+    </span>
+  );
+}
+
+function ConfidenceMini({ value }) {
+  const pct = Math.round((value || 0) * 100);
+  const color = pct >= 75 ? 'bg-signal' : pct >= 50 ? 'bg-signal/50' : 'bg-text-muted/40';
+  return (
+    <div className="flex items-center gap-1">
+      <div className="w-10 h-0.5 bg-border rounded-full overflow-hidden">
+        <div className={`h-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="font-mono text-[9px] text-text-muted">{pct}%</span>
+    </div>
+  );
 }
 
 export default function Watchlist() {
   const { watchlist, quotes, signals, selectedSymbol, setSelectedSymbol, triggerAnalysis } = useTrading();
 
   return (
-    <div className="w-70 bg-surface border-r border-border flex flex-col h-full overflow-hidden" style={{ width: '280px' }}>
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
-        <span className="font-sans text-xs text-text-muted uppercase tracking-widest">WATCHLIST</span>
-        <span className="font-mono text-xs text-text-muted">{watchlist.length}</span>
+    <div className="bg-surface border-r border-border flex flex-col h-full overflow-hidden" style={{ width: '252px' }}>
+      {/* Header */}
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between flex-shrink-0">
+        <span className="font-sans text-[10px] text-text-muted uppercase tracking-[0.15em]">Watchlist</span>
+        <span className="font-mono text-[10px] text-text-muted">{watchlist.length} symbols</span>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {watchlist.length === 0 && (
-          <div className="text-center text-text-muted font-sans text-xs py-8 px-4">
-            No symbols. Add via Settings.
+          <div className="px-3 py-6 text-center">
+            <p className="font-sans text-xs text-text-muted/60 leading-relaxed">
+              No symbols.<br/>Add tickers in Settings.
+            </p>
           </div>
         )}
+
         {watchlist.map(sym => {
-          const q = quotes[sym];
+          const q   = quotes[sym];
           const sig = signals[sym];
-          const price = q?.price;
+          const price     = q?.price;
           const changePct = q?.changePct;
-          const volume = q?.volume;
+          const volume    = q?.volume;
           const isSelected = sym === selectedSymbol;
 
           return (
             <button
               key={sym}
               onClick={() => setSelectedSymbol(sym)}
-              className={`w-full text-left px-4 py-3 border-b border-border cursor-pointer transition-colors ${
+              className={`w-full text-left px-3 py-2.5 border-b border-border transition-colors group ${
                 isSelected
-                  ? 'bg-void border-l-2 border-l-signal'
-                  : 'hover:bg-void/50 border-l-2 border-l-transparent'
+                  ? 'bg-void/80 border-l-[2px] border-l-signal'
+                  : 'border-l-[2px] border-l-transparent hover:bg-void/40'
               }`}
             >
+              {/* Row 1: symbol + badge + change */}
               <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-sm text-text-primary">
+                <div className="flex items-center gap-1.5">
+                  <span className={`font-mono font-bold text-sm ${isSelected ? 'text-text-primary' : 'text-text-primary/85'}`}>
                     {sym}
                   </span>
-                  {sig && (
-                    <span className={signalBadgeClass(sig.action)}>
-                      {sig.action}
-                    </span>
-                  )}
+                  {sig && <ActionBadge action={sig.action} />}
                 </div>
-                <span className={`font-mono text-xs ${changePct == null ? 'text-text-primary' : changePct >= 0 ? 'text-signal' : 'text-loss'}`}>
+                <span className={`font-mono text-xs font-medium ${
+                  changePct == null ? 'text-text-muted' : changePct >= 0 ? 'text-signal' : 'text-loss'
+                }`}>
                   {fmtPct(changePct)}
                 </span>
               </div>
+
+              {/* Row 2: price + volume + confidence */}
               <div className="flex items-center justify-between">
-                <span className="font-mono text-sm text-text-primary">{fmtPrice(price)}</span>
+                <span className="font-mono text-sm text-text-primary">
+                  {price ? fmtPrice(price) : '—'}
+                </span>
                 <div className="flex items-center gap-2">
                   {volume && (
-                    <span className="font-sans text-[10px] text-text-muted">{fmtVolume(volume)}</span>
+                    <span className="font-sans text-[10px] text-text-muted/60">{fmtVolume(volume)}</span>
                   )}
-                  {sig && (
-                    <span className="font-mono text-[10px] text-text-muted">
-                      {(sig.confidence * 100).toFixed(0)}%
-                    </span>
-                  )}
+                  {sig && <ConfidenceMini value={sig.confidence} />}
                 </div>
               </div>
             </button>
@@ -79,12 +101,12 @@ export default function Watchlist() {
 
       {/* Analyze button */}
       {selectedSymbol && (
-        <div className="px-4 pb-4 pt-2 flex-shrink-0">
+        <div className="px-3 pb-3 pt-2 flex-shrink-0">
           <button
             onClick={() => triggerAnalysis(selectedSymbol)}
-            className="w-full bg-void border border-border text-signal font-mono text-xs tracking-widest hover:border-signal transition-colors px-4 py-2 rounded"
+            className="w-full border border-border text-signal/80 font-mono text-[11px] tracking-widest hover:border-signal hover:text-signal hover:bg-signal/5 transition-all px-3 py-2 rounded-sm"
           >
-            ANALYZE {selectedSymbol}
+            ⚡ ANALYZE {selectedSymbol}
           </button>
         </div>
       )}

@@ -21,25 +21,114 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.font-mono, .mono { font-family: 'JetBrains Mono', monospace !important; }
+.font-mono, .mono {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-variant-numeric: tabular-nums;
+}
 
-/* Live pulse animation */
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Focus ring ── */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--signal);
+}
+
+/* ── Live pulse ── */
 @keyframes pulse-live {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  50% { opacity: 0.2; }
 }
 .pulse-live { animation: pulse-live 2s ease-in-out infinite; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--void); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-/* Focus ring — signal colored */
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--signal);
+/* ── Signal ring (used on live dot) ── */
+@keyframes signal-ring {
+  0%   { box-shadow: 0 0 0 0   rgba(0, 212, 170, 0.5); }
+  60%  { box-shadow: 0 0 0 5px rgba(0, 212, 170, 0);   }
+  100% { box-shadow: 0 0 0 0   rgba(0, 212, 170, 0);   }
 }
+.signal-ring { border-radius: 50%; animation: signal-ring 2.5s ease-out infinite; }
+
+/* ── P&L number glows ── */
+.glow-profit {
+  text-shadow: 0 0 24px rgba(0, 212, 170, 0.6), 0 0 48px rgba(0, 212, 170, 0.2);
+}
+.glow-loss-txt {
+  text-shadow: 0 0 24px rgba(239, 68, 68, 0.6), 0 0 48px rgba(239, 68, 68, 0.2);
+}
+
+/* ── Corner-bracket decoration on panels ── */
+.bracket { position: relative; }
+.bracket::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 10px; height: 10px;
+  border-top: 1px solid rgba(0, 212, 170, 0.3);
+  border-left: 1px solid rgba(0, 212, 170, 0.3);
+  pointer-events: none; z-index: 1;
+}
+.bracket::after {
+  content: '';
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 10px; height: 10px;
+  border-bottom: 1px solid rgba(0, 212, 170, 0.3);
+  border-right: 1px solid rgba(0, 212, 170, 0.3);
+  pointer-events: none; z-index: 1;
+}
+
+/* ── Animated grid (login left panel) ── */
+@keyframes grid-drift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+.animated-grid {
+  background-image:
+    linear-gradient(rgba(0, 212, 170, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 170, 0.045) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: grid-drift 22s linear infinite;
+}
+
+/* ── Entry animations ── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in    { animation: fade-in-up 0.35s ease-out both; }
+.animate-in-d1 { animation: fade-in-up 0.35s 0.07s ease-out both; }
+.animate-in-d2 { animation: fade-in-up 0.35s 0.14s ease-out both; }
+.animate-in-d3 { animation: fade-in-up 0.35s 0.21s ease-out both; }
+.animate-in-d4 { animation: fade-in-up 0.35s 0.28s ease-out both; }
+
+/* ── Subtle scan-line texture (barely visible) ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.02) 3px,
+    rgba(0, 0, 0, 0.02) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ── Thin divider pipes ── */
+.pipe { color: var(--border); user-select: none; }
+
+/* ── Action card left-border glow ── */
+.card-buy  { border-left: 2px solid var(--signal); background: rgba(0, 212, 170, 0.025); }
+.card-sell { border-left: 2px solid var(--loss);   background: rgba(239, 68, 68, 0.025); }
+.card-hold { border-left: 2px solid var(--border); }

@@ -4,9 +4,10 @@ import { apiFetch } from '../hooks/useApi';
 
 function Section({ title, children }) {
   return (
-    <div className="bg-surface border border-border rounded">
-      <div className="px-4 py-3 border-b border-border">
-        <span className="font-sans text-[10px] text-text-muted uppercase tracking-widest">{title}</span>
+    <div className="bracket bg-surface border border-border rounded-sm">
+      <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+        <span className="w-1 h-1 rounded-full bg-signal/40 shrink-0" />
+        <span className="font-sans text-[10px] text-text-muted/70 uppercase tracking-[0.15em]">{title}</span>
       </div>
       <div className="p-4">{children}</div>
     </div>
@@ -15,8 +16,8 @@ function Section({ title, children }) {
 
 function Field({ label, children }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="font-sans text-xs text-text-muted uppercase tracking-wider">{label}</label>
+    <div className="flex flex-col gap-1.5">
+      <label className="font-sans text-[10px] text-text-muted/60 uppercase tracking-[0.12em]">{label}</label>
       {children}
     </div>
   );
@@ -31,7 +32,7 @@ function Input({ value, onChange, type = 'text', placeholder, readOnly, disabled
       placeholder={placeholder}
       readOnly={readOnly}
       disabled={disabled}
-      className="bg-void border border-border rounded px-3 py-2 font-mono text-sm text-text-primary placeholder-text-muted focus:shadow-[0_0_0_2px_#00D4AA] outline-none transition-shadow disabled:opacity-50 read-only:opacity-60 read-only:cursor-default"
+      className="bg-void border border-border rounded-sm px-3 py-2 font-mono text-sm text-text-primary placeholder-text-muted/40 transition-shadow disabled:opacity-40 read-only:opacity-50 read-only:cursor-default"
     />
   );
 }
@@ -137,14 +138,19 @@ export default function Profile({ onClose }) {
   return (
     <div className="min-h-screen bg-void overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-void border-b border-border flex items-center justify-between px-4 h-10">
-        <span className="font-sans text-xs text-text-muted uppercase tracking-widest">PROFILE</span>
+      <div className="sticky top-0 z-10 bg-void border-b border-border flex items-center justify-between px-4 h-11">
+        <div className="flex items-center gap-2">
+          <span className="text-signal font-mono text-sm">◆</span>
+          <span className="font-mono font-bold text-sm text-text-primary">DayLens</span>
+          <span className="text-border font-mono">│</span>
+          <span className="font-sans text-[11px] text-text-muted uppercase tracking-[0.15em]">Profile</span>
+        </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="font-sans text-xs text-text-muted hover:text-text-primary transition-colors px-2 py-1"
+            className="font-mono text-[11px] text-text-muted hover:text-signal transition-colors tracking-widest"
           >
-            BACK
+            ← BACK
           </button>
         )}
       </div>
